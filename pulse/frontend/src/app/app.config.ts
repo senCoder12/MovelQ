@@ -10,6 +10,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzNotificationModule } from 'ng-zorro-antd/notification';
 
 import { routes } from './app.routes';
+import { FixtureFleetSummarySource, FleetSummarySource } from './core/fleet-summary.source';
 import { PULSE_ICONS } from './core/icons';
 import { tenantInterceptor } from './core/tenant.interceptor';
 
@@ -18,6 +19,10 @@ registerLocaleData(en);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
+    // The one place the insights page's non-packet figures are bound. Swap
+    // FixtureFleetSummarySource for an HTTP implementation when the agent
+    // exposes a daily-series / review-outcome endpoint.
+    { provide: FleetSummarySource, useClass: FixtureFleetSummarySource },
     provideHttpClient(withInterceptors([tenantInterceptor])),
     provideAnimationsAsync(),
     provideNzI18n(en_US),

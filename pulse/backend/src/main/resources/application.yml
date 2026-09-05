@@ -5,27 +5,69 @@ spring:
   application:
     name: pulse-backend
   datasource:
-    url: jdbc:h2:file:./data/pulse-db;AUTO_SERVER=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ""
+    url: ${PULSE_DB_URL}
+    username: ${PULSE_DB_USER}
+    password: ${PULSE_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Tuned for Neon's connection pooler, which is shared and cheap to reconnect to.
+      maximum-pool-size: 5
+      minimum-idle: 1
+      # Neon scales a branch to zero when idle; the first connection after a pause
+      # spends several seconds waking the compute. This is a cold start, not a fault.
+      connection-timeout: 10000
+      idle-timeout: 60000
+      max-lifetime: 300000
+      # Stated explicitly rather than read from the connection. Through Neon's pooler that
+      # read can come back as -1, and Hikari then tries to restore -1 on every connection it
+      # sets up, which fails with "Transaction isolation level -1 not supported" and empties
+      # the pool. Cost nothing to pin; cost every request when it was not pinned.
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      leak-detection-threshold: 20000
+      # Never fail application startup because Neon happens to be asleep or
+      # unreachable. The pool comes up empty and /api/health reports degraded.
+      initialization-fail-timeout: -1
   jpa:
     hibernate:
-      ddl-auto: none
+      # Flyway owns the schema. Hibernate only checks that the mapping matches it.
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+          # One round trip to us-east-2 costs 150-250ms from India, so batch writes.
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    # The Neon database also holds the warehouse loader's tables. Baseline at 0 so V1 still
+    # runs; Flyway's default of 1 would skip it. See the same settings in pom.xml.
+    baseline-version: 0
 
 pulse:
   agent:
-    base-url: http://localhost:8000
+    base-url: ${AGENT_BASE_URL:http://localhost:8000}
     connect-timeout: 2s
     read-timeout: 5s
+  warehouse:
+    # DuckDB analytical warehouse. Read-only presence check for /api/health --
+    # the Python agent owns this file, the backend never opens it for query.
+    path: ${PULSE_WAREHOUSE_PATH:data/warehouse.duckdb}
+  brief:
+    # The feed is re-read on every page load and every tenant switch, and each read is a
+    # ~300ms round trip to us-east-2. Insights change far more slowly than that. Set to 0
+    # to disable.
+    cache-ttl: 30s
+  latency:
+    # us-east-2 from India is 150-250ms per round trip. Anything past these is
+    # worth a line in the log.
+    slow-query-ms: 500
+    slow-request-ms: 800
 
 logging:
   level:

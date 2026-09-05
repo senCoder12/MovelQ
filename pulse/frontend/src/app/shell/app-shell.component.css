@@ -15,9 +15,11 @@
   flex-direction: column;
   width: var(--pulse-rail-width);
   padding: var(--pulse-space-3);
+  overflow-x: hidden;
   overflow-y: auto;
   border-right: 1px solid var(--pulse-border-default);
   background: var(--pulse-surface-rail);
+  transition: width var(--pulse-motion), padding var(--pulse-motion);
 }
 
 .lockup {
@@ -89,6 +91,7 @@
 }
 
 .rail__item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--pulse-space-3);
@@ -226,6 +229,72 @@
   font-size: 10px;
 }
 
+/* --- Collapsed rail: icons only -------------------------------------------
+   Everything that carries text stands down; every row centres on its icon and
+   grows a `title`, so the label is a hover away rather than gone. */
+
+.rail--collapsed {
+  width: var(--pulse-rail-collapsed);
+  padding: var(--pulse-space-3) 8px;
+}
+
+.rail--collapsed .lockup {
+  justify-content: center;
+  padding: var(--pulse-space-2) 0 var(--pulse-space-4);
+}
+
+.rail--collapsed .lockup__text,
+.rail--collapsed .lockup__version,
+.rail--collapsed .rail__label,
+.rail--collapsed .tenant__text,
+.rail--collapsed .tenant__caret {
+  display: none;
+}
+
+/* A section heading has no room to read as text, so it reads as a rule
+   instead -- the grouping survives, the wording does not. */
+.rail--collapsed .rail__section {
+  overflow: hidden;
+  height: 1px;
+  margin: var(--pulse-space-3) 6px;
+  padding: 0;
+  background: var(--pulse-border-default);
+  font-size: 0;
+  line-height: 0;
+}
+
+.rail--collapsed .rail__item {
+  justify-content: center;
+  padding: 0;
+}
+
+/* The count and the health state become dots on the icon: the collapsed rail
+   still says *that* something is waiting, and the tooltip says what. */
+.rail--collapsed .rail__badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  overflow: hidden;
+  min-width: 0;
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  background: var(--pulse-danger);
+  font-size: 0;
+  line-height: 0;
+}
+
+.rail--collapsed .rail__dot {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+}
+
+.rail--collapsed .tenant {
+  justify-content: center;
+  padding: var(--pulse-space-2) 0;
+}
+
 /* --- Zone 2: top bar ------------------------------------------------------- */
 
 .main {
@@ -280,6 +349,62 @@
   height: 6px;
   border-radius: 50%;
   background: currentcolor;
+}
+
+/* Tones for a view-published pill. The unmodified .issue stays danger so the
+   shell's own issue line is unchanged. */
+.issue--ok {
+  background: var(--pulse-ok-soft);
+  color: var(--pulse-ok-text);
+}
+
+.issue--warn {
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+}
+
+.issue--danger {
+  background: var(--pulse-danger-soft);
+  color: var(--pulse-danger-text);
+}
+
+/* --- Segmented filter, published by the active view ------------------------ */
+
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-panel);
+}
+
+.segmented__item {
+  height: 26px;
+  padding: 0 var(--pulse-space-3);
+  border: none;
+  border-radius: var(--pulse-radius-control);
+  background: transparent;
+  color: var(--pulse-text-secondary);
+  font: inherit;
+  font-size: var(--pulse-text-body);
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion);
+}
+
+.segmented__item:hover {
+  color: var(--pulse-text-primary);
+}
+
+.segmented__item--active {
+  background: var(--pulse-primary);
+  color: var(--pulse-primary-fg);
+  font-weight: 500;
+}
+
+.segmented__item--active:hover {
+  color: var(--pulse-primary-fg);
 }
 
 .topbar__right {

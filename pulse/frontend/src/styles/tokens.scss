@@ -44,6 +44,9 @@
   --pulse-primary-fg: #ffffff;
   --pulse-primary-soft: rgba(99, 102, 241, 0.14);
   --pulse-primary-text: #a5a8fb;
+  // Solid-accent hover. Dark lifts, light deepens -- `filter: brightness()`
+  // does the wrong thing in one of the two themes, so the direction is a token.
+  --pulse-primary-hover: #7679f3;
 
   // --- Status ramp: danger / warning / success ---
   --pulse-danger: #e5484d;
@@ -66,6 +69,17 @@
 
   // --- Shadow (floating layers only) ---
   --pulse-shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  // --- Scrim behind a floating layer (drawer/modal mask) ---
+  --pulse-scrim: rgba(0, 0, 0, 0.62);
+
+  // --- Nested surfaces. In dark, nesting goes *lighter*: the page is the
+  // floor, so a sheet lifted off it and a tile inside that sheet each step up.
+  --pulse-surface-1: #1c1c24;
+  --pulse-surface-2: #16161d;
+
+  // Browser chrome (address bar / form controls) follows the page surface.
+  --pulse-theme-color: #0e0e13;
 
   color-scheme: dark;
 }
@@ -97,6 +111,7 @@
   --pulse-primary-fg: #ffffff;
   --pulse-primary-soft: rgba(79, 70, 229, 0.09);
   --pulse-primary-text: #4338ca;
+  --pulse-primary-hover: #4338ca;
 
   // --- Status ramp ---
   --pulse-danger: #dc2626;
@@ -120,13 +135,23 @@
   // --- Shadow (floating layers ONLY: drawer, modal, dropdown, tooltip) ---
   --pulse-shadow-overlay: 0 16px 40px rgba(20, 22, 30, 0.14);
 
+  // --- Scrim behind a floating layer (drawer/modal mask). Lighter than the
+  // dark theme's: a 62% black veil over a white page reads as a blackout. ---
+  --pulse-scrim: rgba(20, 22, 30, 0.35);
+
   color-scheme: light;
+
+  // Browser chrome (address bar / form controls) follows the page surface.
+  --pulse-theme-color: #f6f7f9;
 
   // --- Nested surfaces (a surface elevated off the page, and a second level
   // nested inside it -- the leadership pack's document sheet (surface-2) and
-  // the tiles sitting inside it (surface-1)) ---
-  --pulse-surface-1: var(--pulse-surface-card);
-  --pulse-surface-2: var(--pulse-surface-card);
+  // the tiles sitting inside it (surface-1)). They must not both resolve to
+  // surface-card: in light that is white-on-white and the inner level
+  // disappears. In light, nesting goes *darker* (the sheet is the brightest
+  // thing on the page); in dark it goes lighter. ---
+  --pulse-surface-1: #f1f2f6;
+  --pulse-surface-2: #ffffff;
 
   // --- Severity ramp (severity: int 0-100; low <50, medium 50-79, high 80+).
   // Aliased onto the status ramp so a theme swap moves them together. ---

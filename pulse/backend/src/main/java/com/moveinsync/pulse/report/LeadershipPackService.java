@@ -12,6 +12,7 @@ import java.util.Map;
 
 import com.moveinsync.pulse.agent.InsightAgentClient;
 import com.moveinsync.pulse.agent.dto.InsightPacket;
+import com.moveinsync.pulse.insight.InsightSource;
 import com.moveinsync.pulse.report.LeadershipNarrativeRequest.FindingContext;
 import com.moveinsync.pulse.report.LeadershipNarrativeResponse.FindingNarrative;
 import com.moveinsync.pulse.report.LeadershipPack.DateRange;
@@ -21,7 +22,6 @@ import com.moveinsync.pulse.report.LeadershipPack.Footer;
 import com.moveinsync.pulse.report.LeadershipPack.Scope;
 import com.moveinsync.pulse.report.LeadershipPack.Tile;
 import com.moveinsync.pulse.web.TenantContext;
-import com.moveinsync.pulse.web.TenantScopeFilter;
 
 import org.springframework.stereotype.Service;
 
@@ -38,13 +38,13 @@ public class LeadershipPackService {
     private static final DateTimeFormatter PERIOD_DISPLAY = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
     private static final NumberFormat TRIP_COUNT_FORMAT = NumberFormat.getIntegerInstance(Locale.US);
 
+    private final InsightSource insightSource;
     private final InsightAgentClient agentClient;
-    private final TenantScopeFilter tenantScopeFilter;
     private final TenantContext tenantContext;
 
-    public LeadershipPackService(InsightAgentClient agentClient, TenantScopeFilter tenantScopeFilter, TenantContext tenantContext) {
+    public LeadershipPackService(InsightSource insightSource, InsightAgentClient agentClient, TenantContext tenantContext) {
+        this.insightSource = insightSource;
         this.agentClient = agentClient;
-        this.tenantScopeFilter = tenantScopeFilter;
         this.tenantContext = tenantContext;
     }
 
@@ -52,7 +52,9 @@ public class LeadershipPackService {
         YearMonth yearMonth = YearMonth.parse(period);
         String periodDisplay = yearMonth.format(PERIOD_DISPLAY);
 
-        List<InsightPacket> insights = tenantScopeFilter.apply(agentClient.listInsights(), tenantContext.tenantId());
+        // Insights come from Postgres, already scoped to the tenant by the data layer.
+        // Only the prose still comes from the agent.
+        List<InsightPacket> insights = insightSource.listInsights();
         List<InsightPacket> topFindings = insights.stream()
                 .sorted(Comparator.comparingInt(InsightPacket::severity).reversed())
                 .limit(MAX_FINDINGS)

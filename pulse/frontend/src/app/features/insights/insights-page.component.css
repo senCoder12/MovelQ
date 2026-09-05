@@ -1,3 +1,12 @@
+/* Three stacked bands: the month in numbers, the month as a shape, then who
+   carries it. Every surface is a bordered card -- no elevation anywhere, per
+   the shell's "borders, never shadows" rule. */
+
+.insights {
+  display: grid;
+  gap: var(--pulse-space-5);
+}
+
 .insights__status {
   margin: 0;
   color: var(--pulse-text-muted);
@@ -8,6 +17,523 @@
   color: var(--pulse-severity-high-fg);
 }
 
-.insights__headline {
+/* --- Band 1: headline numbers ---------------------------------------------- */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--pulse-space-4);
+}
+
+.kpi,
+.panel {
+  padding: var(--pulse-space-4) var(--pulse-space-5);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-card);
+  background: var(--pulse-surface-card);
+}
+
+.kpi__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+  margin-bottom: var(--pulse-space-3);
+}
+
+.kpi__label {
+  margin: 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kpi__value {
+  margin: 0;
   color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-metric);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* The word after the number reads as prose, not as part of the figure. */
+.kpi__unit {
+  margin-left: 6px;
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-body);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.kpi__sub {
+  margin: var(--pulse-space-2) 0 0;
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-body);
+}
+
+.kpi__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+  margin-top: var(--pulse-space-4);
+  padding-top: var(--pulse-space-3);
+  border-top: 1px solid var(--pulse-border-subtle);
+  font-size: var(--pulse-text-mono);
+}
+
+.kpi__foot-label {
+  color: var(--pulse-text-muted);
+}
+
+.kpi__foot-value {
+  font-weight: 500;
+}
+
+.kpi__foot-value--ok {
+  color: var(--pulse-ok-text);
+}
+
+.kpi__foot-value--warn {
+  color: var(--pulse-warn-text);
+}
+
+.kpi__foot-value--danger {
+  color: var(--pulse-danger-text);
+}
+
+.kpi__foot-value--muted {
+  color: var(--pulse-text-muted);
+}
+
+/* --- Badges ---------------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 3px var(--pulse-space-2);
+  border-radius: var(--pulse-radius-control);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill--ok {
+  background: var(--pulse-ok-soft);
+  color: var(--pulse-ok-text);
+}
+
+.pill--warn {
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+}
+
+.pill--danger {
+  background: var(--pulse-danger-soft);
+  color: var(--pulse-danger-text);
+}
+
+.pill--muted {
+  border: 1px solid var(--pulse-border-default);
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-secondary);
+  font-weight: 500;
+}
+
+/* --- Panels (chart + the two bottom cards) --------------------------------- */
+
+.panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--pulse-space-4);
+  margin-bottom: var(--pulse-space-4);
+}
+
+.panel__titles {
+  min-width: 0;
+}
+
+.panel__title {
+  margin: 0;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-title);
+  font-weight: 600;
+}
+
+.panel__sub {
+  margin: var(--pulse-space-1) 0 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+.panel__count {
+  flex: none;
+  padding: 5px var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-label);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.panel__count--accent {
+  border-color: transparent;
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+}
+
+.panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+  margin-top: var(--pulse-space-4);
+  padding-top: var(--pulse-space-3);
+  border-top: 1px solid var(--pulse-border-subtle);
+  font-size: var(--pulse-text-mono);
+}
+
+.panel__foot-label {
+  color: var(--pulse-text-muted);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--pulse-primary-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--pulse-motion);
+}
+
+.link:hover {
+  color: var(--pulse-primary);
+}
+
+/* --- Band 2: the trend chart ----------------------------------------------- */
+
+.legend {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--pulse-space-4);
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-mono);
+}
+
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.legend__swatch {
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.legend__swatch--total {
+  background: var(--pulse-primary);
+}
+
+/* Dashed, because the series it stands for is dashed. */
+.legend__swatch--resolved {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--pulse-ok) 0 4px,
+    transparent 4px 7px
+  );
+}
+
+.chart__body {
+  display: flex;
+  gap: var(--pulse-space-3);
+  height: 200px;
+}
+
+/* Pulled half a line proud at each end so the first and last labels sit on the
+   gridlines rather than inside them. */
+.chart__yaxis {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  margin: -6px 0;
+  text-align: right;
+}
+
+.chart__ytick {
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.chart__plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chart__svg {
+  display: block;
+  /* The baseline gridline sits exactly on the bottom edge; without this its
+     lower half is clipped and it reads thinner than the ones above it. */
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+}
+
+.chart__grid {
+  stroke: var(--pulse-border-subtle);
+  stroke-width: 1;
+}
+
+.chart__area--total {
+  fill: url(#pulse-fill-total);
+}
+
+.chart__area--resolved {
+  fill: url(#pulse-fill-resolved);
+}
+
+.chart__stop--total-top {
+  stop-color: var(--pulse-primary);
+  stop-opacity: 0.3;
+}
+
+.chart__stop--total-bottom {
+  stop-color: var(--pulse-primary);
+  stop-opacity: 0.02;
+}
+
+.chart__stop--resolved-top {
+  stop-color: var(--pulse-ok);
+  stop-opacity: 0.22;
+}
+
+.chart__stop--resolved-bottom {
+  stop-color: var(--pulse-ok);
+  stop-opacity: 0;
+}
+
+.chart__line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.chart__line--total {
+  stroke: var(--pulse-primary);
+}
+
+.chart__line--resolved {
+  stroke: var(--pulse-ok);
+  stroke-dasharray: 5 4;
+}
+
+.chart__peak {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pulse-primary);
+  box-shadow: 0 0 0 3px var(--pulse-primary-soft);
+  transform: translate(-50%, -50%);
+}
+
+.chart__xaxis {
+  position: relative;
+  height: 14px;
+  /* Clears the y-axis gutter so a tick sits over its own column. */
+  margin: var(--pulse-space-3) 0 0 36px;
+}
+
+.chart__xtick {
+  position: absolute;
+  top: 0;
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.chart__xtick--middle {
+  transform: translateX(-50%);
+}
+
+.chart__xtick--end {
+  transform: translateX(-100%);
+}
+
+/* --- Band 3: category split + vendor exposure ------------------------------ */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr);
+  gap: var(--pulse-space-4);
+  align-items: start;
+}
+
+.bars,
+.vendors {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-4);
+}
+
+.bars__head {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  margin-bottom: var(--pulse-space-2);
+  font-size: var(--pulse-text-body);
+}
+
+.bars__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.bars__label {
+  overflow: hidden;
+  flex: 1 1 auto;
+  color: var(--pulse-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bars__pct {
+  flex: none;
+  color: var(--pulse-text-primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.bars__track {
+  height: 6px;
+  border-radius: var(--pulse-radius-pill);
+  background: var(--pulse-surface-hover);
+}
+
+.bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--pulse-radius-pill);
+}
+
+.bars__empty {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+.vendors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-2);
+}
+
+.vendors__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+  padding: var(--pulse-space-3) var(--pulse-space-4);
+  border: 1px solid var(--pulse-border-subtle);
+  border-radius: var(--pulse-radius-panel);
+  background: var(--pulse-surface-panel);
+}
+
+.vendors__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vendors__name {
+  overflow: hidden;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-body);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vendors__meta {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.vendors__figure {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.vendors__amount {
+  font-size: var(--pulse-text-body);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Ranked, not thresholded: the panel is "top 3 by exposure", so the colour
+   says where in that order a row sits. */
+.vendors__amount--rank0 {
+  color: var(--pulse-danger-text);
+}
+
+.vendors__amount--rank1 {
+  color: var(--pulse-warn-text);
+}
+
+.vendors__amount--rank2 {
+  color: var(--pulse-ok-text);
+}
+
+.vendors__caption {
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+}
+
+/* Below the shell's two-column comfort width the bands stack rather than
+   squeezing a 30px figure into a 140px card. */
+@media (max-width: 1080px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

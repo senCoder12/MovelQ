@@ -233,11 +233,13 @@
   font-size: var(--pulse-text-title);
   font-weight: 600;
   cursor: pointer;
-  transition: filter var(--pulse-motion);
+  transition: background-color var(--pulse-motion);
 }
 
+/* Not `filter: brightness()`: brightening is a lift in dark and a wash-out in
+   light. The token carries the right direction for each theme. */
 .card__cta:hover {
-  filter: brightness(1.08);
+  background: var(--pulse-primary-hover);
 }
 
 .card__cta-label {

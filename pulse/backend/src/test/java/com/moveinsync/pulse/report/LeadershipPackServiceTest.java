@@ -11,7 +11,6 @@ import com.moveinsync.pulse.agent.dto.Metric;
 import com.moveinsync.pulse.agent.dto.Narrative;
 import com.moveinsync.pulse.report.LeadershipNarrativeResponse.FindingNarrative;
 import com.moveinsync.pulse.web.TenantContext;
-import com.moveinsync.pulse.web.TenantScopeFilter;
 
 import org.junit.jupiter.api.Test;
 
@@ -72,8 +71,9 @@ class LeadershipPackServiceTest {
                         new FindingNarrative("ins_002", "body two", "Close the coverage gap."),
                         new FindingNarrative("ins_003", "body three", "Reconcile fuel type at billing.")));
 
+        // InsightSource stands in for Postgres; the agent still supplies the prose.
         LeadershipPackService service = new LeadershipPackService(
-                new FakeAgentClient(insights, narrative), new TenantScopeFilter(), new TenantContext());
+                () -> insights, new FakeAgentClient(insights, narrative), new TenantContext());
 
         LeadershipPack pack = service.assemble("2026-07");
 

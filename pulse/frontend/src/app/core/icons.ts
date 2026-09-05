@@ -1,8 +1,11 @@
 import {
   AlertOutline,
+  ArrowDownOutline,
+  ArrowRightOutline,
+  ArrowUpOutline,
   BankOutline,
   BarChartOutline,
-  BulbOutline,
+  BgColorsOutline,
   CalendarOutline,
   CheckOutline,
   ClockCircleOutline,
@@ -14,6 +17,8 @@ import {
   FileTextOutline,
   FilterOutline,
   HistoryOutline,
+  MenuFoldOutline,
+  MenuUnfoldOutline,
   ReloadOutline,
   RightOutline,
   SafetyCertificateOutline,
@@ -42,9 +47,15 @@ export const PULSE_ICONS = [
   CalendarOutline,
   DownOutline,
   ReloadOutline,
-  BulbOutline,
+  BgColorsOutline,
   SearchOutline,
   EnterOutline,
+  MenuFoldOutline,
+  MenuUnfoldOutline,
+  // Insights dashboard: trend badges, panel CTAs.
+  ArrowUpOutline,
+  ArrowDownOutline,
+  ArrowRightOutline,
   // Data quality: export.
   UploadOutline,
   // Insight card: category icons, fact panels, CTA.

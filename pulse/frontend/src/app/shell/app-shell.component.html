@@ -1,7 +1,7 @@
 <div class="shell">
   <!-- Zone 1: rail. Product lockup, grouped nav, tenant pinned at the bottom. -->
-  <nav class="rail" aria-label="Views">
-    <div class="lockup">
+  <nav class="rail" [class.rail--collapsed]="shell.railCollapsed()" id="rail" aria-label="Views">
+    <div class="lockup" [title]="shell.railCollapsed() ? 'PULSE AI v' + shell.version : ''">
       <span class="lockup__mark">P</span>
       <span class="lockup__text">
         <span class="lockup__name">PULSE AI</span>
@@ -17,7 +17,12 @@
       <ul class="rail__nav">
         @for (item of group.items; track item.path) {
           <li>
-            <a class="rail__item" [routerLink]="item.path" routerLinkActive="rail__item--active">
+            <a
+              class="rail__item"
+              [routerLink]="item.path"
+              routerLinkActive="rail__item--active"
+              [title]="shell.railCollapsed() ? item.label : ''"
+            >
               <span nz-icon [nzType]="item.icon" class="rail__icon"></span>
               <span class="rail__label">{{ item.label }}</span>
               @if (item.path === '/brief' && signalCount() > 0) {
@@ -41,6 +46,7 @@
         nzTrigger="click"
         nzPlacement="topLeft"
         [nzDropdownMenu]="tenantMenu"
+        [title]="shell.railCollapsed() ? tenants.tenantId() + ' enterprise' : ''"
       >
         <span class="tenant__mark pulse-mono">{{ tenants.tenantId().slice(0, 2) }}</span>
         <span class="tenant__text">
@@ -66,31 +72,80 @@
          scroll container, not a child of it. -->
     <header class="topbar">
       <div class="topbar__left">
+        <button
+          type="button"
+          class="control control--icon"
+          (click)="shell.toggleRail()"
+          [attr.aria-expanded]="!shell.railCollapsed()"
+          [attr.aria-label]="railToggleLabel()"
+          [title]="railToggleLabel()"
+          aria-controls="rail"
+        >
+          <span nz-icon [nzType]="shell.railCollapsed() ? 'menu-unfold' : 'menu-fold'"></span>
+        </button>
         <h1 class="topbar__view">{{ shell.viewTitle() }}</h1>
-        @if (shell.agentError(); as error) {
-          <span class="issue issue--error">
+        @if (shell.status(); as status) {
+          <!-- A view that publishes its own pill owns the slot outright: the
+               agent/issue line is what the bar says when nothing claims it. -->
+          <span class="issue" [class]="'issue--' + status.tone">
             <span class="issue__dot"></span>
-            Agent unreachable &middot; {{ error }}
+            {{ status.label }}
           </span>
         } @else {
-          @if (issueLine(); as line) {
-            <span class="issue">
+          @if (shell.agentError(); as error) {
+            <span class="issue issue--error">
               <span class="issue__dot"></span>
-              {{ line }}
+              Agent unreachable &middot; {{ error }}
             </span>
+          } @else {
+            @if (issueLine(); as line) {
+              <span class="issue">
+                <span class="issue__dot"></span>
+                {{ line }}
+              </span>
+            }
           }
         }
       </div>
 
       <div class="topbar__right">
+        @if (shell.segments().length > 0) {
+          <div class="segmented" role="group" aria-label="Filter">
+            @for (segment of shell.segments(); track segment.key) {
+              <button
+                type="button"
+                class="segmented__item"
+                [class.segmented__item--active]="segment.key === shell.activeSegment()"
+                [attr.aria-pressed]="segment.key === shell.activeSegment()"
+                (click)="shell.selectSegment(segment.key)"
+              >
+                {{ segment.label }}
+              </button>
+            }
+          </div>
+        }
+
         <button
           type="button"
           class="control control--icon"
-          [title]="'Theme: ' + theme.mode()"
-          (click)="theme.toggle()"
+          nz-dropdown
+          nzTrigger="click"
+          nzPlacement="bottomRight"
+          [nzDropdownMenu]="themeMenu"
+          [title]="'Theme: ' + themeLabelFor(theme.mode())"
+          aria-label="Theme"
         >
-          <span nz-icon [nzType]="theme.resolved() === 'dark' ? 'bulb' : 'eye'"></span>
+          <span nz-icon nzType="bg-colors"></span>
         </button>
+        <nz-dropdown-menu #themeMenu="nzDropdownMenu">
+          <ul nz-menu>
+            @for (mode of theme.modes; track mode) {
+              <li nz-menu-item [nzSelected]="mode === theme.mode()" (click)="theme.set(mode)">
+                {{ themeLabelFor(mode) }}
+              </li>
+            }
+          </ul>
+        </nz-dropdown-menu>
 
         <button type="button" class="control control--hint" (click)="shell.openPalette()" title="Command palette">
           <span class="pulse-mono">&#8984;K</span>

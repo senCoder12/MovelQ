@@ -12,7 +12,7 @@ import { VendorsPageComponent } from './features/vendors/vendors-page.component'
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'brief' },
   { path: 'brief', component: BriefPageComponent, data: { viewTitle: 'Executive brief' } },
-  { path: 'insights', component: InsightsPageComponent, data: { viewTitle: 'Insights' } },
+  { path: 'insights', component: InsightsPageComponent, data: { viewTitle: 'Fleet insights' } },
   { path: 'reports', pathMatch: 'full', redirectTo: 'reports/leadership' },
   {
     path: 'reports/leadership',

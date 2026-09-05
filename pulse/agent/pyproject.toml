@@ -12,7 +12,7 @@ dependencies = [
     "pyyaml",
     "pydantic",
     "python-dotenv",
-    "anthropic",
+    "google-genai",
 ]
 
 [project.optional-dependencies]

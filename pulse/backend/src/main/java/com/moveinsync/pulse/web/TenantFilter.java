@@ -48,7 +48,13 @@ public class TenantFilter extends OncePerRequestFilter {
             return;
         }
         tenantContext.getObject().setTenantId(tenantId);
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            // Request threads are pooled. Leaving the tenant set would hand the next
+            // request on this thread the previous caller's scope.
+            tenantContext.getObject().clear();
+        }
     }
 
     private record Error(int status, String message) {

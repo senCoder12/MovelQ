@@ -5,7 +5,31 @@
   <title>Pulse</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Declared before the stylesheets land so the very first paint (and the
+       browser's own scrollbars / form controls) already knows the document
+       supports both palettes. tokens.scss re-states color-scheme per theme. -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e0e13" media="(prefers-color-scheme: dark)">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Stamp the stored theme on <html> before first paint. ThemeService does the
+    // same thing, but only once Angular has bootstrapped -- by then the document
+    // has already been painted in the system palette, so anyone whose saved
+    // choice differs from their OS sees a flash of the wrong theme on every
+    // load. Key is ThemeService's STORAGE_KEY; keep the two in sync.
+    (function () {
+      try {
+        var mode = localStorage.getItem('pulse.theme');
+        if (mode === 'light' || mode === 'dark') {
+          document.documentElement.setAttribute('data-theme', mode);
+        }
+      } catch (e) {
+        // Storage unavailable (private mode, blocked cookies): fall through to
+        // the prefers-color-scheme default, which is the 'system' behaviour.
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

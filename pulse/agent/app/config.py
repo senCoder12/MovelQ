@@ -29,7 +29,7 @@ class Settings(BaseModel):
     duckdb_path: Path = _path("DUCKDB_PATH", "data/warehouse.duckdb")
     raw_data_dir: Path = _path("RAW_DATA_DIR", "data/raw")
     llm_api_key: str | None = os.getenv("LLM_API_KEY") or None
-    llm_model: str = os.getenv("LLM_MODEL", "claude-opus-5")
+    llm_model: str = os.getenv("LLM_MODEL", "gemini-2.5-pro")
 
 
 @lru_cache(maxsize=1)

@@ -1,8 +1,22 @@
+import pytest
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from app.main import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _no_llm_key(monkeypatch):
+    """Force the key-absent condition instead of assuming it.
+
+    A developer with a populated agent/.env would otherwise have these tests
+    make real, billed Gemini calls. Settings reads os.getenv at class-definition
+    time and get_settings is lru_cached, so patching os.environ is too late --
+    the cached instance itself has to be patched.
+    """
+    monkeypatch.setattr(get_settings(), "llm_api_key", None)
 
 PAYLOAD = {
     "period": "July 2026",
@@ -20,8 +34,8 @@ PAYLOAD = {
 
 
 def test_leadership_narrative_falls_back_without_an_llm_key():
-    # No LLM_API_KEY is configured in the test environment, so this must
-    # degrade to the template fallback rather than 500 or hang on a real call.
+    # With no LLM_API_KEY (pinned by the autouse fixture), this must degrade to
+    # the template fallback rather than 500 or hang on a real call.
     response = client.post("/internal/leadership-narrative", json=PAYLOAD)
     assert response.status_code == 200
     body = response.json()

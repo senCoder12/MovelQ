@@ -18,3 +18,8 @@ __pycache__/
 
 # env
 .env
+
+# secrets (explicit)
+backend/.env
+*/.env
+.env.local

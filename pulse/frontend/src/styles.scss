@@ -67,6 +67,16 @@ body {
   border-radius: var(--pulse-radius-card);
 }
 
+/* ng-zorro's stylesheet is compiled from Less at build time, so it bakes in a
+   single (light) palette and cannot read a CSS custom property. Every surface
+   it paints therefore has to be re-stated here in tokens -- otherwise the whole
+   floating layer of the app (drawer, modal, dropdown, tooltip, skeleton,
+   notification) stays light while the rest of it follows the theme. These are
+   the only rules in the app that reach for `.ant-*`. */
+
+/* --- Drawer + modal shells --- */
+
+.ant-drawer-content,
 .ant-drawer-body,
 .ant-drawer-header,
 .ant-modal-content,
@@ -75,11 +85,167 @@ body {
   color: var(--pulse-text-primary);
 }
 
+.ant-drawer-header,
+.ant-modal-header {
+  border-bottom-color: var(--pulse-border-default);
+  background: var(--pulse-surface-card);
+}
+
+.ant-modal-footer {
+  border-top-color: var(--pulse-border-default);
+}
+
 .ant-drawer-title,
 .ant-modal-title {
   color: var(--pulse-text-primary);
   font-size: var(--pulse-text-title);
   font-weight: 500;
+}
+
+.ant-drawer-close,
+.ant-modal-close,
+.ant-modal-close-x {
+  color: var(--pulse-text-muted);
+}
+
+.ant-drawer-close:hover,
+.ant-modal-close:hover {
+  color: var(--pulse-text-primary);
+}
+
+/* One scrim token, so the veil is a heavy black in dark and a light wash in
+   light -- Ant's fixed 45% black blacks out a white page. */
+.ant-drawer-mask,
+.ant-modal-mask,
+.ant-image-preview-mask {
+  background: var(--pulse-scrim);
+}
+
+/* --- Dropdown + menu --- */
+
+.ant-dropdown-menu,
+.ant-select-dropdown,
+.ant-menu {
+  background: var(--pulse-surface-card);
+  color: var(--pulse-text-primary);
+}
+
+.ant-dropdown-menu-item,
+.ant-menu-item,
+.ant-select-item {
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-body);
+}
+
+.ant-dropdown-menu-item:hover,
+.ant-menu-item:hover,
+.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+/* The selected row carries the accent, matching the rail's active item. */
+.ant-dropdown-menu-item-selected,
+.ant-menu-item-selected,
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+}
+
+.ant-dropdown-menu-item-divider,
+.ant-menu-item-divider,
+.ant-divider {
+  background: var(--pulse-border-default);
+  border-color: var(--pulse-border-default);
+}
+
+.ant-dropdown-menu-item-disabled,
+.ant-menu-item-disabled {
+  color: var(--pulse-text-muted);
+}
+
+/* Ant paints the menu's own background on the submenu arrow/indicator. */
+.ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
+  background: var(--pulse-primary-soft);
+}
+
+/* --- Tooltip --- */
+
+/* ng-zorro 17 paints the arrow from this custom property; the two arrow
+   selectors below cover the older markup. */
+.ant-tooltip {
+  --antd-arrow-background-color: var(--pulse-surface-panel);
+}
+
+.ant-tooltip-inner {
+  background: var(--pulse-surface-panel);
+  border: 1px solid var(--pulse-border-default);
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-mono);
+}
+
+.ant-tooltip-arrow-content,
+.ant-tooltip-arrow::before {
+  background: var(--pulse-surface-panel);
+}
+
+/* --- Skeleton --- */
+
+.ant-skeleton-title,
+.ant-skeleton-paragraph > li,
+.ant-skeleton-avatar,
+.ant-skeleton-button,
+.ant-skeleton-input,
+.ant-skeleton-image {
+  background: var(--pulse-surface-hover);
+}
+
+/* Ant's shimmer is a fixed grey gradient; retint it off the hover surface so
+   it stays a sheen rather than a light bar on a dark page. */
+.ant-skeleton.ant-skeleton-active .ant-skeleton-title,
+.ant-skeleton.ant-skeleton-active .ant-skeleton-paragraph > li,
+.ant-skeleton.ant-skeleton-active .ant-skeleton-avatar,
+.ant-skeleton.ant-skeleton-active .ant-skeleton-button,
+.ant-skeleton.ant-skeleton-active .ant-skeleton-input,
+.ant-skeleton.ant-skeleton-active .ant-skeleton-image {
+  background: linear-gradient(
+      90deg,
+      var(--pulse-surface-hover) 25%,
+      var(--pulse-border-strong) 37%,
+      var(--pulse-surface-hover) 63%
+    )
+    0 0 / 400% 100%;
+}
+
+/* --- Notification --- */
+
+.ant-notification-notice {
+  border: 1px solid var(--pulse-border-default);
+  background: var(--pulse-surface-card);
+}
+
+.ant-notification-notice-message {
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-title);
+}
+
+.ant-notification-notice-description {
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-body);
+}
+
+.ant-notification-notice-close {
+  color: var(--pulse-text-muted);
+}
+
+.ant-notification-notice-close:hover {
+  color: var(--pulse-text-primary);
+}
+
+/* --- Empty state --- */
+
+.ant-empty-description {
+  color: var(--pulse-text-muted);
 }
 
 /* Motion budget: hover/focus only. Kill ng-zorro's longer default easings on

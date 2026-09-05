@@ -15,7 +15,7 @@ import { filter } from 'rxjs';
 import { formatCompact } from '../core/format';
 import { HealthService } from '../core/health.service';
 import { Period, ShellService } from '../core/shell.service';
-import { ThemeService } from '../core/theme.service';
+import { ThemeMode, ThemeService } from '../core/theme.service';
 import { TenantId, TenantService } from '../core/tenant.service';
 import { CommandPaletteComponent } from './command-palette.component';
 import { NAV_GROUPS } from './nav';
@@ -73,6 +73,11 @@ export class AppShellComponent {
   });
 
   readonly periodLabel = computed(() => label(this.shell.period()));
+
+  /** Names what the toggle will do, not the state it is in. */
+  readonly railToggleLabel = computed(() =>
+    this.shell.railCollapsed() ? 'Expand sidebar' : 'Collapse sidebar',
+  );
 
   /** The top bar's headline: how much is wrong, over how many trips. */
   readonly issueLine = computed(() => {
@@ -133,6 +138,11 @@ export class AppShellComponent {
 
   periodLabelFor(period: Period): string {
     return label(period);
+  }
+
+  /** Menu label for a theme mode. 'system' names what it follows, not itself. */
+  themeLabelFor(mode: ThemeMode): string {
+    return mode === 'system' ? 'Match system' : mode === 'dark' ? 'Dark' : 'Light';
   }
 
   refresh(): void {

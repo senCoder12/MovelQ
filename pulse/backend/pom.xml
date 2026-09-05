@@ -34,13 +34,23 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- @Around tenant filter aspect and the controller timing aspect. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+        <!-- Flyway 10+ needs the per-database module; core alone cannot talk to Postgres. -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -56,10 +66,74 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <!-- Run from the repo root so ./data/pulse-db lands in pulse/data -->
+                    <!-- Run from the repo root so ./data/warehouse.duckdb resolves in pulse/data -->
                     <workingDirectory>${project.basedir}/..</workingDirectory>
                 </configuration>
             </plugin>
+
+            <!--
+              Standalone `mvn flyway:migrate`. Reads the same three variables the app does,
+              from the process environment. Source backend/.env first, or use scripts/migrate.sh:
+                set -a; source backend/.env; set +a; mvn -f backend/pom.xml flyway:migrate
+            -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <configuration>
+                    <url>${env.PULSE_DB_URL}</url>
+                    <user>${env.PULSE_DB_USER}</user>
+                    <password>${env.PULSE_DB_PASSWORD}</password>
+                    <locations>
+                        <location>filesystem:${project.basedir}/src/main/resources/db/migration</location>
+                    </locations>
+                    <!--
+                      The Neon database is shared: public already holds the mock_* tables the
+                      warehouse loader wrote, and staging/core/analytics come from
+                      db/deploy_to_neon.sh. Flyway would otherwise refuse to start against a
+                      non-empty schema it has no history for. Baselining records a marker row;
+                      it does not touch those tables, and V1/V2 create nothing that collides
+                      with them. Matches spring.flyway.baseline-on-migrate in application.yml.
+                    -->
+                    <baselineOnMigrate>true</baselineOnMigrate>
+                    <!-- Baseline at 0, not Flyway's default of 1: the pre-existing tables are
+                         not our V1, and baselining at 1 would mark V1 as already applied and
+                         leave V2 with no insight table to reference. -->
+                    <baselineVersion>0</baselineVersion>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.flywaydb</groupId>
+                        <artifactId>flyway-database-postgresql</artifactId>
+                        <version>${flyway.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgresql.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- mvn -Pseed spring-boot:run  ->  boots the app and loads db/seed/*.sql. -->
+        <profile>
+            <id>seed</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/..</workingDirectory>
+                            <arguments>
+                                <argument>--seed</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

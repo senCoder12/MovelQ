@@ -3,36 +3,246 @@
 } @else if (insights().length === 0 && !loading()) {
   <p class="insights__status">No insights in this tenant.</p>
 } @else {
-  <table class="pulse-table pulse-table--clickable">
-    <colgroup>
-      <col style="width: 52px" />
-      <col style="width: 220px" />
-      <col style="width: 180px" />
-      <col />
-      <col style="width: 96px" />
-      <col style="width: 116px" />
-    </colgroup>
-    <thead>
-      <tr>
-        <th scope="col">Sev</th>
-        <th scope="col">Metric</th>
-        <th scope="col">Entity</th>
-        <th scope="col">Headline</th>
-        <th scope="col">n</th>
-        <th scope="col">Window</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (insight of insights(); track insight.insight_id) {
-        <tr (click)="open(insight)">
-          <td><app-severity-badge [severity]="insight.severity" /></td>
-          <td class="pulse-mono">{{ insight.metric.id }}</td>
-          <td>{{ insight.entity.name }}</td>
-          <td class="insights__headline">{{ insight.narrative.headline }}</td>
-          <td class="pulse-mono pulse-table__num">{{ count(insight.metric.n) }}</td>
-          <td class="pulse-mono">{{ insight.metric.window }}</td>
-        </tr>
+  <div class="insights">
+    <!-- Row 1: the month in three numbers. Direction, volume, money. -->
+    <section class="kpis">
+      <article class="kpi">
+        <header class="kpi__head">
+          <h2 class="kpi__label">Incident trend</h2>
+          @if (deltaLabel(); as delta) {
+            <span class="pill" [class]="'pill--' + trendTone()">
+              <span nz-icon [nzType]="direction() === 'up' ? 'arrow-up' : 'arrow-down'"></span>
+              {{ delta }}
+            </span>
+          }
+        </header>
+        <p class="kpi__value">{{ trendWord() }}</p>
+        <p class="kpi__sub">{{ trendBlurb() }}</p>
+        <footer class="kpi__foot">
+          <span class="kpi__foot-label">{{ priorLabel() }}</span>
+          <span class="kpi__foot-value" [class]="'kpi__foot-value--' + trendTone()">
+            {{ trendFoot() }}
+          </span>
+        </footer>
+      </article>
+
+      <article class="kpi">
+        <header class="kpi__head">
+          <h2 class="kpi__label">Active anomalies</h2>
+          <span class="pill pill--muted">{{ periodBadge() }}</span>
+        </header>
+        <p class="kpi__value">
+          {{ compact(totals().flagged) }}
+          <span class="kpi__unit">trips flagged</span>
+        </p>
+        <p class="kpi__sub">
+          Across {{ compact(totals().analysed) }} total analysed fleet operations
+        </p>
+        <footer class="kpi__foot">
+          <span class="kpi__foot-label">Resolution rate</span>
+          <span class="kpi__foot-value kpi__foot-value--ok">{{ resolutionLabel() }}</span>
+        </footer>
+      </article>
+
+      <article class="kpi">
+        <header class="kpi__head">
+          <h2 class="kpi__label">Financial exposure</h2>
+          <span class="pill pill--danger">Billing risk</span>
+        </header>
+        <p class="kpi__value">
+          {{ compactInr(totals().exposureInr) }}
+          <span class="kpi__unit">unrecovered</span>
+        </p>
+        <p class="kpi__sub">SLA variance &amp; unverified delay claims</p>
+        <footer class="kpi__foot">
+          <span class="kpi__foot-label">Under reconciliation</span>
+          <span class="kpi__foot-value kpi__foot-value--warn">{{ disputeLabel() }}</span>
+        </footer>
+      </article>
+    </section>
+
+    <!-- Row 2: the same month as a shape. Detected against verified. -->
+    <section class="panel chart">
+      <header class="panel__head">
+        <div class="panel__titles">
+          <h2 class="panel__title">Daily anomaly trend</h2>
+          <p class="panel__sub">
+            Incident volume over the past 30 days vs resolved telematics events
+          </p>
+        </div>
+        <div class="legend">
+          <span class="legend__item">
+            <span class="legend__swatch legend__swatch--total"></span>
+            Total anomalies
+          </span>
+          <span class="legend__item">
+            <span class="legend__swatch legend__swatch--resolved"></span>
+            Resolved / verified
+          </span>
+        </div>
+      </header>
+
+      @if (plot(); as chart) {
+        <div class="chart__body">
+          <div class="chart__yaxis">
+            @for (tick of chart.yTicks; track $index) {
+              <span class="chart__ytick pulse-mono">{{ tick }}</span>
+            }
+          </div>
+
+          <div class="chart__plot">
+            <svg
+              class="chart__svg"
+              viewBox="0 0 720 200"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Daily anomaly trend"
+            >
+              <defs>
+                <linearGradient id="pulse-fill-total" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" class="chart__stop chart__stop--total-top" />
+                  <stop offset="100%" class="chart__stop chart__stop--total-bottom" />
+                </linearGradient>
+                <linearGradient id="pulse-fill-resolved" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" class="chart__stop chart__stop--resolved-top" />
+                  <stop offset="100%" class="chart__stop chart__stop--resolved-bottom" />
+                </linearGradient>
+              </defs>
+
+              @for (y of chart.grid; track $index) {
+                <line
+                  class="chart__grid"
+                  x1="0"
+                  [attr.y1]="y"
+                  x2="720"
+                  [attr.y2]="y"
+                  vector-effect="non-scaling-stroke"
+                />
+              }
+
+              <path class="chart__area chart__area--total" [attr.d]="chart.totalArea" />
+              <path class="chart__area chart__area--resolved" [attr.d]="chart.resolvedArea" />
+              <path
+                class="chart__line chart__line--resolved"
+                [attr.d]="chart.resolvedLine"
+                vector-effect="non-scaling-stroke"
+              />
+              <path
+                class="chart__line chart__line--total"
+                [attr.d]="chart.totalLine"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+
+            <!-- Placed in HTML, not the SVG: the plot scales non-uniformly and
+                 a circle drawn inside it would render as an ellipse. -->
+            <span
+              class="chart__peak"
+              [style.left.%]="chart.peak.leftPct"
+              [style.top.%]="chart.peak.topPct"
+            ></span>
+          </div>
+        </div>
+
+        <div class="chart__xaxis">
+          @for (tick of chart.xTicks; track tick.label) {
+            <span
+              class="chart__xtick pulse-mono"
+              [class]="'chart__xtick--' + tick.anchor"
+              [style.left.%]="tick.atPct"
+            >
+              {{ tick.label }}
+            </span>
+          }
+        </div>
       }
-    </tbody>
-  </table>
+    </section>
+
+    <!-- Row 3: who and what carries it. -->
+    <section class="split">
+      <article class="panel">
+        <header class="panel__head">
+          <div class="panel__titles">
+            <h2 class="panel__title">Top impact by category</h2>
+            <p class="panel__sub">Operational domain distribution across detected variance</p>
+          </div>
+          <span class="panel__count">
+            {{ categories().length }}
+            {{ categories().length === 1 ? 'category' : 'categories' }}
+          </span>
+        </header>
+
+        <ul class="bars">
+          @for (slice of categories(); track slice.domain) {
+            <li class="bars__row">
+              <div class="bars__head">
+                <span class="bars__dot" [style.background]="slice.color"></span>
+                <span class="bars__label">{{ slice.label }}</span>
+                <span class="bars__pct">{{ pct(slice.sharePct) }}</span>
+              </div>
+              <div class="bars__track">
+                <span
+                  class="bars__fill"
+                  [style.width.%]="slice.sharePct"
+                  [style.background]="slice.color"
+                ></span>
+              </div>
+            </li>
+          } @empty {
+            <li class="bars__empty">No attributed impact in this segment.</li>
+          }
+        </ul>
+
+        @if (primaryCategory(); as top) {
+          <footer class="panel__foot">
+            <span class="panel__foot-label">Primary contributor</span>
+            <button type="button" class="link" (click)="openCategory()">
+              {{ top.label }} ({{ pct(top.sharePct) }})
+            </button>
+          </footer>
+        }
+      </article>
+
+      <article class="panel">
+        <header class="panel__head">
+          <div class="panel__titles">
+            <h2 class="panel__title">Top discrepant vendors</h2>
+            <p class="panel__sub">Highest exposure accounts needing review</p>
+          </div>
+          <span class="panel__count panel__count--accent">Top {{ vendors().length }}</span>
+        </header>
+
+        <ul class="vendors">
+          @for (vendor of vendors(); track vendor.name; let i = $index) {
+            <li class="vendors__row">
+              <span class="vendors__text">
+                <span class="vendors__name">{{ vendor.name }}</span>
+                <span class="vendors__meta">
+                  {{ count(vendor.incidents) }} incidents ({{ pct(vendor.sharePct) }} share)
+                </span>
+              </span>
+              <span class="vendors__figure">
+                <span class="vendors__amount" [class]="'vendors__amount--rank' + i">
+                  {{ compactInr(vendor.exposureInr) }}
+                </span>
+                <span class="vendors__caption">Exposure</span>
+              </span>
+            </li>
+          } @empty {
+            <li class="bars__empty">No vendor attributed in this segment.</li>
+          }
+        </ul>
+
+        <footer class="panel__foot">
+          <span class="panel__foot-label">
+            Cumulative exposure: {{ compactInr(cumulativeExposure()) }}
+          </span>
+          <button type="button" class="link" (click)="openVendors()">
+            View scorecards
+            <span nz-icon nzType="arrow-right"></span>
+          </button>
+        </footer>
+      </article>
+    </section>
+  </div>
 }
