@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 
+from app.agent.prompts.templates import DECISION_GENERATION_PROMPT, SYSTEM_PROMPT
+from app.application.services.evidence_service import EvidenceService
+from app.config import get_settings
 from app.domain.entities import ActionOption, Decision, Situation
 from app.domain.enums import ActionType, EvidenceType, SituationType
-from app.domain.interfaces import BaselineRepository, DecisionRepository
+from app.domain.interfaces import BaselineRepository, DecisionRepository, LLMProvider
 
 logger = structlog.get_logger(__name__)
 
@@ -16,21 +20,124 @@ logger = structlog.get_logger(__name__)
 class DecisionService:
     """Decision intelligence engine.
 
-    Compares candidate interventions, attaches confidence and evidence ratings,
-    and produces actionable recommendations.
+    Uses an LLM, grounded in the situation's evidence packet (impact,
+    historical baseline, alert/episode context), to compare candidate
+    interventions and produce a recommendation. Falls back to a
+    deterministic rules-based comparison if the LLM is unavailable or its
+    response cannot be trusted (invalid JSON, unknown action types, etc.).
     """
 
     def __init__(
         self,
         decision_repository: DecisionRepository,
         baseline_repository: Optional[BaselineRepository] = None,
+        evidence_service: Optional[EvidenceService] = None,
+        llm_provider: Optional[LLMProvider] = None,
     ):
         self.decision_repository = decision_repository
         self.baseline_repository = baseline_repository
+        self.evidence_service = evidence_service
+        self.settings = get_settings()
+
+        if llm_provider is not None:
+            self.llm_provider = llm_provider
+        else:
+            from app.agent.providers.factory import build_llm_provider
+            self.llm_provider = build_llm_provider()
+
+        self._llm_cache: Dict[str, Decision] = {}
 
     async def generate_decision(self, situation: Situation) -> Decision:
         logger.info("decision.generate", situation_id=situation.situation_id)
 
+        decision = await self._generate_llm_decision(situation)
+        if decision is None:
+            decision = self._generate_deterministic_decision(situation)
+
+        await self.decision_repository.save_decision(decision)
+        return decision
+
+    async def _generate_llm_decision(self, situation: Situation) -> Optional[Decision]:
+        if not self.evidence_service:
+            return None
+
+        try:
+            packet = await self.evidence_service.build_evidence_packet(situation)
+        except Exception as e:
+            logger.warning("decision.evidence_build_failed", error=str(e))
+            return None
+
+        cache_key = packet.evidence_hash
+        if cache_key in self._llm_cache:
+            logger.info("decision.cache_hit", cache_key=cache_key)
+            return self._llm_cache[cache_key]
+
+        evidence_json = json.dumps(packet.model_dump(), indent=2, default=str)
+        prompt = DECISION_GENERATION_PROMPT.format(evidence_json=evidence_json)
+
+        try:
+            raw_response = await self.llm_provider.generate(
+                prompt=prompt,
+                system_prompt=SYSTEM_PROMPT,
+                temperature=self.settings.llm_temperature,
+                max_tokens=self.settings.llm_max_tokens,
+            )
+            if not raw_response:
+                return None
+
+            clean_text = raw_response.strip()
+            if clean_text.startswith("```json"):
+                clean_text = clean_text[7:]
+            elif clean_text.startswith("```"):
+                clean_text = clean_text[3:]
+            if clean_text.endswith("```"):
+                clean_text = clean_text[:-3]
+
+            # strict=False: Gemini/GPT JSON responses sometimes contain raw
+            # newlines inside string values, which the strict JSON grammar rejects.
+            parsed = json.loads(clean_text.strip(), strict=False)
+            decision = self._parse_llm_decision(situation, parsed)
+        except Exception as e:
+            logger.warning("decision.llm_fallback_triggered", error=str(e))
+            return None
+
+        self._llm_cache[cache_key] = decision
+        return decision
+
+    def _parse_llm_decision(self, situation: Situation, parsed: Dict[str, Any]) -> Decision:
+        options: List[ActionOption] = []
+        for raw_opt in parsed["options"]:
+            options.append(
+                ActionOption(
+                    action_type=ActionType(raw_opt["action_type"]),
+                    description=raw_opt["description"],
+                    expected_impact=raw_opt["expected_impact"],
+                    estimated_cost=raw_opt.get("estimated_cost", "Low"),
+                    confidence=raw_opt.get("confidence", "MEDIUM"),
+                    supporting_evidence=raw_opt.get("supporting_evidence", []),
+                    assumptions=raw_opt.get("assumptions", []),
+                    evidence_type=EvidenceType(raw_opt.get("evidence_type", EvidenceType.AI_REASONING.value)),
+                )
+            )
+
+        if not options:
+            raise ValueError("LLM returned zero decision options")
+
+        recommended = ActionType(parsed["recommended_action"])
+        if recommended not in {o.action_type for o in options}:
+            raise ValueError("recommended_action not among returned options")
+
+        return Decision(
+            decision_id=str(uuid.uuid4()),
+            situation_id=situation.situation_id,
+            options=options,
+            recommended_action=recommended,
+            recommendation_reasoning=parsed.get("recommendation_reasoning", ""),
+            created_at=datetime.utcnow(),
+        )
+
+    def _generate_deterministic_decision(self, situation: Situation) -> Decision:
+        """Level 2 deterministic fallback used when the LLM is unavailable or untrustworthy."""
         candidates: List[ActionOption] = []
 
         # 1. Option: DO_NOTHING (always present as baseline comparison)
@@ -123,7 +230,7 @@ class DecisionService:
             recommended = ActionType.NOTIFY_EMPLOYEES
             reasoning = "Proactive employee communication is the lowest-cost, highest-confidence intervention."
 
-        decision = Decision(
+        return Decision(
             decision_id=str(uuid.uuid4()),
             situation_id=situation.situation_id,
             options=candidates,
@@ -131,6 +238,3 @@ class DecisionService:
             recommendation_reasoning=reasoning,
             created_at=datetime.utcnow(),
         )
-
-        await self.decision_repository.save_decision(decision)
-        return decision

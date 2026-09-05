@@ -124,6 +124,7 @@ async def get_situation_decisions(situation_id: str):
 
     try:
         decision = await decision_svc.generate_decision(situation)
+        await situation_svc.mark_action_recommended(situation_id)
         return decision.model_dump()
     except Exception as e:
         return {"error": str(e), "situation_id": situation_id}
@@ -158,3 +159,21 @@ async def take_action(situation_id: str, request: ActionRequest):
         "outcome_label": "UNAVAILABLE",
         "message": "Action recorded. Outcome verification will follow when data is available.",
     }
+
+
+@router.post("/situations/{situation_id}/resolve")
+async def resolve_situation(situation_id: str):
+    """Mark a situation resolved once the line manager has acted on its recommendation."""
+    situation_svc = get_situation_service()
+
+    situation = await situation_svc.get_situation_detail(situation_id)
+    if not situation:
+        raise HTTPException(status_code=404, detail="Situation not found")
+
+    from app.domain.enums import SituationStatus
+    from app.core.cache import cache
+
+    updated = await situation_svc.update_situation_status(situation_id, SituationStatus.RESOLVED)
+    cache.delete_pattern("home_dashboard:*")
+
+    return updated.model_dump()

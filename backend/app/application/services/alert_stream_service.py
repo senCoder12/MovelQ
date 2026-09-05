@@ -22,6 +22,7 @@ from app.application.services.alert_episode_service import AlertEpisodeService
 from app.application.services.decision_service import DecisionService
 from app.application.services.signal_service import SignalService
 from app.application.services.situation_service import SituationService
+from app.core.cache import cache
 from app.domain.interfaces import TripRepository
 from app.infrastructure.database import execute
 
@@ -95,6 +96,7 @@ class AlertStreamService:
             situation_id=situation.situation_id,
             mode=investigation.get("mode", "llm"),
         )
+        await self.situation_service.mark_action_recommended(situation.situation_id)
 
         await self._refresh_dashboard_views()
 
@@ -104,3 +106,10 @@ class AlertStreamService:
                 await execute(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view}")
             except Exception as e:
                 logger.warning("alert_stream.mv_refresh_failed", view=view, error=str(e))
+
+        # /home caches its response for 10 minutes (app/core/cache.py) and was
+        # previously only invalidated by take_action() in situations.py -- a
+        # brand new situation from this pipeline would otherwise sit unseen
+        # on the Home page for up to 10 minutes even with the frontend polling.
+        cleared = cache.delete_pattern("home_dashboard:*")
+        logger.info("alert_stream.home_cache_invalidated", entries_cleared=cleared)

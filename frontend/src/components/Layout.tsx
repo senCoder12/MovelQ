@@ -1,12 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Clock, AlertTriangle, Users, GitBranch, Map, FileText, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Clock, AlertTriangle, GitBranch, Map, FileText, MessageCircle } from 'lucide-react';
 import clsx from 'clsx';
 
 const navigation = [
   { name: 'Home', href: '/', icon: LayoutDashboard },
   { name: 'Situations', href: '/situations', icon: AlertTriangle },
-  { name: 'Team Readiness', href: '/readiness', icon: Users },
   { name: 'Decisions', href: '/decisions', icon: GitBranch },
   { name: 'Routes', href: '/routes', icon: Map },
   { name: 'Reports', href: '/reports', icon: FileText },

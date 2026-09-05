@@ -4,12 +4,12 @@ import { api } from '../../services/api';
 import SituationCard from '../../components/SituationCard';
 
 export default function SituationsPage() {
-  const { data: situations, loading, error } = useFetch(() => api.getSituations(), [], 5000);
+  const { data: situations, loading, error, refetch } = useFetch(() => api.getSituations(), [], 5000);
   const [filter, setFilter] = useState('ALL');
 
   if (loading) return <div className="p-8">Loading situations...</div>;
   if (error) return <div className="p-8 text-red-500">Error loading situations.</div>;
-  
+
   const filtered = situations?.filter(s => filter === 'ALL' || s.status === filter) || [];
 
   return (
@@ -20,7 +20,7 @@ export default function SituationsPage() {
           <p className="text-gray-500 mt-1">Monitor and resolve active operational risks</p>
         </div>
         <div className="flex gap-2">
-          {['ALL', 'ACTION_RECOMMENDED', 'INVESTIGATING', 'RESOLVED'].map(f => (
+          {['ALL', 'ACTION_RECOMMENDED', 'RESOLVED'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -33,10 +33,10 @@ export default function SituationsPage() {
           ))}
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-6">
         {filtered.map(sit => (
-          <SituationCard key={sit.situation_id} situation={sit} />
+          <SituationCard key={sit.situation_id} situation={sit} onResolved={refetch} />
         ))}
         {filtered.length === 0 && (
           <div className="col-span-2 p-12 text-center text-gray-500 bg-white rounded-lg border border-gray-200">

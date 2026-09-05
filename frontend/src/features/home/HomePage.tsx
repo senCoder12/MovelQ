@@ -1,25 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Siren } from 'lucide-react';
 import { useFetch } from '../../hooks/useFetch';
 import { api } from '../../services/api';
 import SituationCard from '../../components/SituationCard';
 import ReadinessGauge from '../../components/ReadinessGauge';
+import SimulateAlertModal from '../../components/SimulateAlertModal';
 
 export default function HomePage() {
   const { data, loading, error } = useFetch(() => api.getHome(), [], 5000);
+  const [showSimulate, setShowSimulate] = useState(false);
 
   if (loading) return <div className="p-8 text-gray-500">Loading Command Center...</div>;
   if (error) return <div className="p-8 text-red-500">Error loading dashboard data.</div>;
   if (!data) return null;
 
-  const overallScore = data.stats.overall_readiness <= 1.0 
-    ? Math.round(data.stats.overall_readiness * 1000) / 10 
+  const overallScore = data.stats.overall_readiness <= 1.0
+    ? Math.round(data.stats.overall_readiness * 1000) / 10
     : Math.round(data.stats.overall_readiness * 10) / 10;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Command Center</h2>
-        <p className="text-gray-500 mt-1">Real-time mobility intelligence and active risk intervention</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Command Center</h2>
+          <p className="text-gray-500 mt-1">Real-time mobility intelligence and active risk intervention</p>
+        </div>
+        <button
+          onClick={() => setShowSimulate(true)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+        >
+          <Siren className="w-4 h-4" />
+          Simulate Alert
+        </button>
       </div>
 
       <div className="grid grid-cols-4 gap-6">
@@ -103,6 +115,8 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {showSimulate && <SimulateAlertModal onClose={() => setShowSimulate(false)} />}
     </div>
   );
 }

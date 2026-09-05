@@ -1,20 +1,26 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, Dict, Optional
 
 import structlog
 
 from app.agent.prompts.templates import (
+    ANALYTICS_SCHEMA_DESCRIPTION,
+    ANSWER_WITH_DATA_PROMPT,
     ASK_MOVE_PROMPT,
     SITUATION_INVESTIGATION_PROMPT,
+    SQL_ROUTER_PROMPT,
     SYSTEM_PROMPT,
 )
-from app.agent.providers.mock_provider import MockProvider
+from app.agent.sql_guard import enforce_limit, is_safe_select
 from app.application.services.evidence_service import EvidenceService
 from app.config import get_settings
 from app.domain.entities import Situation
 from app.domain.interfaces import LLMProvider, SituationRepository
+
+_LLM_TIMEOUT_SECONDS = 25
 
 logger = structlog.get_logger(__name__)
 
@@ -36,17 +42,12 @@ class AgentService:
         self.situation_repository = situation_repository
         self.settings = get_settings()
 
-        # Wire LLM provider: use OpenAI if key configured, otherwise MockProvider
+        # Wire LLM provider based on LLM_MODEL/LLM_API_KEY, otherwise MockProvider
         if llm_provider is not None:
             self.llm_provider = llm_provider
-        elif self.settings.llm_api_key:
-            try:
-                from app.agent.providers.openai_provider import OpenAIProvider
-                self.llm_provider = OpenAIProvider()
-            except Exception:
-                self.llm_provider = MockProvider()
         else:
-            self.llm_provider = MockProvider()
+            from app.agent.providers.factory import build_llm_provider
+            self.llm_provider = build_llm_provider()
 
         self._llm_cache: Dict[str, Dict[str, Any]] = {}
 
@@ -86,7 +87,9 @@ class AgentService:
             if clean_text.endswith("```"):
                 clean_text = clean_text[:-3]
 
-            parsed = json.loads(clean_text)
+            # strict=False: Gemini/GPT JSON responses sometimes contain raw
+            # newlines inside string values, which the strict JSON grammar rejects.
+            parsed = json.loads(clean_text, strict=False)
             self._llm_cache[cache_key] = parsed
             return parsed
 
@@ -137,11 +140,84 @@ class AgentService:
             "mode": "deterministic_template",
         }
 
+    async def _generate(self, prompt: str, **kwargs: Any) -> str:
+        """LLM call with a hard timeout so one slow request can never hang the app."""
+        return await asyncio.wait_for(
+            self.llm_provider.generate(prompt=prompt, **kwargs),
+            timeout=_LLM_TIMEOUT_SECONDS,
+        )
+
+    @staticmethod
+    def _parse_json_response(raw: str) -> Dict[str, Any]:
+        clean_text = raw.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text[7:]
+        elif clean_text.startswith("```"):
+            clean_text = clean_text[3:]
+        if clean_text.endswith("```"):
+            clean_text = clean_text[:-3]
+        return json.loads(clean_text.strip(), strict=False)
+
+    async def _route_question(self, question: str) -> Dict[str, Any]:
+        """Ask the LLM whether this question needs a database query, and if so, what SQL."""
+        prompt = SQL_ROUTER_PROMPT.format(
+            schema=ANALYTICS_SCHEMA_DESCRIPTION,
+            question=question,
+        )
+        raw = await self._generate(prompt, system_prompt=SYSTEM_PROMPT, temperature=0.0)
+        return self._parse_json_response(raw)
+
     async def ask_move(self, question: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Ask Move conversational interface."""
+        """Ask Move conversational interface: question -> LLM decides if data is needed ->
+        text-to-SQL against the analytics schema -> LLM formats the result -> answer.
+        """
         logger.info("agent.ask_move", question=question)
 
-        # Retrieve active situations as context
+        route: Dict[str, Any] = {}
+        try:
+            route = await self._route_question(question)
+        except Exception as e:
+            logger.warning("agent.sql_routing_failed", error=str(e))
+
+        sql = route.get("sql")
+        if route.get("needs_data") and sql:
+            if not is_safe_select(sql):
+                logger.warning("agent.unsafe_sql_blocked", sql=sql)
+            else:
+                try:
+                    from app.infrastructure.database import fetch_rows
+
+                    safe_sql = enforce_limit(sql)
+                    rows = await asyncio.wait_for(fetch_rows(safe_sql), timeout=12)
+                    row_dicts = [dict(r) for r in rows]
+
+                    answer_prompt = ANSWER_WITH_DATA_PROMPT.format(
+                        question=question,
+                        sql=safe_sql,
+                        row_count=len(row_dicts),
+                        rows_json=json.dumps(row_dicts[:20], indent=2, default=str),
+                    )
+                    answer = await self._generate(
+                        answer_prompt,
+                        system_prompt=SYSTEM_PROMPT,
+                        temperature=self.settings.llm_temperature,
+                    )
+                    return {
+                        "answer": answer,
+                        "evidence": {
+                            "sql": safe_sql,
+                            "row_count": len(row_dicts),
+                            "rows": row_dicts[:20],
+                        },
+                        "confidence": "HIGH",
+                        "mode": "text_to_sql",
+                    }
+                except Exception as e:
+                    logger.warning("agent.sql_execution_failed", error=str(e), sql=sql)
+                    # Falls through to the conversational path below.
+
+        # No data needed, routing failed, or the SQL was rejected/errored --
+        # answer conversationally from active-situation context instead.
         active_sits = await self.situation_repository.get_situations(limit=5)
         evidence = {
             "active_situations_count": len(active_sits),
@@ -163,15 +239,15 @@ class AgentService:
         )
 
         try:
-            answer = await self.llm_provider.generate(
-                prompt=prompt,
+            answer = await self._generate(
+                prompt,
                 system_prompt=SYSTEM_PROMPT,
                 temperature=self.settings.llm_temperature,
             )
             return {
                 "answer": answer,
                 "evidence": evidence,
-                "confidence": "HIGH",
+                "confidence": "MEDIUM" if route else "HIGH",
             }
         except Exception as e:
             logger.warning("agent.ask_move_fallback", error=str(e))

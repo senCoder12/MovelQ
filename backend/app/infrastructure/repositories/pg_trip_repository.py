@@ -95,6 +95,7 @@ class PgTripRepository(TripRepository):
         business_unit: str,
         office: str,
         trip_date: date,
+        vendor: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         conditions = ["trip_date = $1"]
         params: list[Any] = [trip_date]
@@ -105,6 +106,9 @@ class PgTripRepository(TripRepository):
         if office:
             params.append(office)
             conditions.append(f"office = ${len(params)}")
+        if vendor:
+            params.append(vendor)
+            conditions.append(f"vendor = ${len(params)}")
 
         conditions.append("shift IS NOT NULL AND shift <> ''")
         where = " AND ".join(conditions)

@@ -145,21 +145,25 @@ class ReadinessService:
         return res
 
     async def get_all_shift_readiness(
-        self, business_unit: Optional[str] = None, trip_date: Optional[date] = None
+        self,
+        business_unit: Optional[str] = None,
+        trip_date: Optional[date] = None,
+        vendor: Optional[str] = None,
     ) -> List[ShiftReadiness]:
         target_date = trip_date or date(2026, 7, 15)
         bu = business_unit or ""
-        cache_key = f"all_readiness:{bu or 'ALL'}:{target_date}"
+        cache_key = f"all_readiness:{bu or 'ALL'}:{vendor or 'ALL'}:{target_date}"
         cached = cache.get(cache_key)
         if cached is not None:
             return cached
 
-        logger.info("readiness.get_all", business_unit=bu, trip_date=target_date)
+        logger.info("readiness.get_all", business_unit=bu, trip_date=target_date, vendor=vendor)
 
         summaries = await self.trip_repository.get_shift_summary(
             business_unit=bu,
             office="",
             trip_date=target_date,
+            vendor=vendor,
         )
 
         results: List[ShiftReadiness] = []
@@ -208,8 +212,11 @@ class ReadinessService:
                 avg_delay_minutes=avg_delay,
             )
             results.append(readiness)
-            single_key = f"shift_readiness:{s_bu}:{office}:{shift}:{direction}:{target_date}"
-            cache.set(single_key, readiness, ttl=600.0)
+            if not vendor:
+                # Only backfill the per-shift cache from the unfiltered aggregate --
+                # a vendor-scoped result here would corrupt lookups for other vendors.
+                single_key = f"shift_readiness:{s_bu}:{office}:{shift}:{direction}:{target_date}"
+                cache.set(single_key, readiness, ttl=600.0)
 
         # Fallback default if empty database
         if not results:

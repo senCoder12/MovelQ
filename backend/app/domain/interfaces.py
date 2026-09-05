@@ -55,6 +55,7 @@ class TripRepository(ABC):
         business_unit: str,
         office: str,
         trip_date: date,
+        vendor: str | None = None,
     ) -> list[dict[str, Any]]: ...
 
     @abstractmethod

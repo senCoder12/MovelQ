@@ -262,3 +262,20 @@ class SituationService:
             situation.updated_at = datetime.utcnow()
             await self.situation_repository.update_situation(situation)
         return situation
+
+    async def mark_action_recommended(self, situation_id: str) -> Optional[Situation]:
+        """Advance a situation to ACTION_RECOMMENDED once a decision exists for it.
+
+        Only applies from DETECTED/INVESTIGATING so it never downgrades a
+        situation that a line manager has already acted on (ACTIONED,
+        VERIFYING, RESOLVED, DISMISSED) back to a pre-action state.
+        """
+        situation = await self.situation_repository.get_situation(situation_id)
+        if situation and situation.status in (
+            SituationStatus.DETECTED,
+            SituationStatus.INVESTIGATING,
+        ):
+            situation.status = SituationStatus.ACTION_RECOMMENDED
+            situation.updated_at = datetime.utcnow()
+            await self.situation_repository.update_situation(situation)
+        return situation

@@ -84,7 +84,7 @@ def create_app() -> FastAPI:
     )
 
     # Register routes
-    from app.api.routes import home, shifts, readiness, situations, decisions, ask, health
+    from app.api.routes import home, shifts, readiness, situations, decisions, ask, health, simulate
 
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
     app.include_router(home.router, prefix="/api/v1", tags=["home"])
@@ -93,6 +93,7 @@ def create_app() -> FastAPI:
     app.include_router(situations.router, prefix="/api/v1", tags=["situations"])
     app.include_router(decisions.router, prefix="/api/v1", tags=["decisions"])
     app.include_router(ask.router, prefix="/api/v1", tags=["ask-move"])
+    app.include_router(simulate.router, prefix="/api/v1", tags=["simulate"])
 
     # Replay routes (demo/development)
     try:

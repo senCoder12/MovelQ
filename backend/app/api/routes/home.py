@@ -82,5 +82,11 @@ async def get_home(
             "employees_at_risk": total_at_risk,
         },
     }
-    cache.set(cache_key, res, ttl=600.0)
+    # Short TTL, not the 10 minutes this used to be: the frontend polls this
+    # endpoint every 5s specifically so new situations appear without a
+    # manual reload (see useFetch's intervalMs), and any request in between
+    # -- including this same polling -- would otherwise re-cache whatever
+    # partial snapshot existed at that instant for the full original TTL,
+    # regardless of which explicit call sites remember to invalidate it.
+    cache.set(cache_key, res, ttl=4.0)
     return res

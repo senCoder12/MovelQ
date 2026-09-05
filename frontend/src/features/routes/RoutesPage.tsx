@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { useFetch } from '../../hooks/useFetch';
 import { api } from '../../services/api';
-import { Bus, MapPin, Clock, AlertTriangle, CheckCircle, Zap, Fuel, ArrowUpDown } from 'lucide-react';
+import { Bus, MapPin, Clock, AlertTriangle, CheckCircle, Zap, Fuel, ArrowUpDown, Truck } from 'lucide-react';
 
 export default function RoutesPage() {
-  const { data: shifts, loading, error } = useFetch(() => api.getShifts());
   const [selectedShift, setSelectedShift] = useState<string>('ALL');
+  const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
+
+  const { data: vendors } = useFetch(() => api.getVendors(), []);
+  const { data: shifts, loading, error } = useFetch(
+    () => api.getShifts(undefined, undefined, selectedVendor === 'ALL' ? undefined : selectedVendor),
+    [selectedVendor]
+  );
 
   if (loading) return <div className="p-8 text-gray-500">Loading route performance...</div>;
   if (error) return <div className="p-8 text-red-500">Error loading routes.</div>;
@@ -27,20 +33,35 @@ export default function RoutesPage() {
             Fleet operations, route punctuality, delay distribution, and vehicle utilization
           </p>
         </div>
-        <div className="flex gap-2">
-          {['ALL', '03:00', '07:00', '11:00', '15:00', '19:00', '23:00'].map(sh => (
-            <button
-              key={sh}
-              onClick={() => setSelectedShift(sh)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                selectedShift === sh
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-2">
+            {['ALL', '03:00', '07:00', '11:00', '15:00', '19:00', '23:00'].map(sh => (
+              <button
+                key={sh}
+                onClick={() => setSelectedShift(sh)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                  selectedShift === sh
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {sh === 'ALL' ? 'All Shifts' : sh}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <Truck className="w-3.5 h-3.5 text-gray-400" />
+            <select
+              value={selectedVendor}
+              onChange={e => setSelectedVendor(e.target.value)}
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {sh === 'ALL' ? 'All Shifts' : sh}
-            </button>
-          ))}
+              <option value="ALL">All Vendors</option>
+              {vendors?.map(v => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -151,6 +172,18 @@ export default function RoutesPage() {
                   <span className="text-gray-400">At Risk / No-Shows:</span>
                   <p className={`font-semibold mt-0.5 ${shift.employees_at_risk > 0 ? 'text-red-600' : 'text-gray-800'}`}>
                     {shift.employees_at_risk} / {shift.employees_noshow}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Avg Delay:</span>
+                  <p className={`font-semibold mt-0.5 ${(shift.avg_delay_minutes || 0) > 5 ? 'text-orange-600' : 'text-gray-800'}`}>
+                    {shift.avg_delay_minutes != null ? `${shift.avg_delay_minutes} min` : '—'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-400">vs Baseline:</span>
+                  <p className={`font-semibold mt-0.5 ${(shift.delta_pp || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {shift.delta_pp != null ? `${shift.delta_pp > 0 ? '+' : ''}${shift.delta_pp} pp` : '—'}
                   </p>
                 </div>
               </div>

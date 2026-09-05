@@ -32,7 +32,17 @@ class MockProvider(LLMProvider):
             
         if "Explain this situation" in prompt:
             return "This is a mocked explanation of the situation. It affects several employees and requires immediate attention."
-            
+
+        if "Respond with raw JSON only" in prompt and '"needs_data"' in prompt:
+            return json.dumps({
+                "needs_data": True,
+                "sql": "SELECT business_unit, office, COUNT(*) AS delayed_trips FROM analytics.v_trip WHERE trip_date = '2026-07-15' AND is_delayed GROUP BY 1, 2 ORDER BY delayed_trips DESC LIMIT 10",
+                "reasoning": "The question asks for specific delay figures, which requires querying trip data.",
+            })
+
+        if "Query Results (JSON rows" in prompt:
+            return "Mock answer: based on the query results, a handful of offices account for most of today's delays. Review the rows above for exact counts."
+
         return "This is a mock LLM response."
 
     async def generate_with_tools(

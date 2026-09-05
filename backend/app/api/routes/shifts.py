@@ -15,19 +15,42 @@ router = APIRouter()
 async def get_shifts(
     business_unit: str = Query(default="", description="Filter by business unit"),
     date_str: str = Query(default="", alias="date", description="Date YYYY-MM-DD"),
+    vendor: str = Query(default="", description="Filter by vendor"),
 ):
     """Get shift summaries with readiness for a given date."""
     readiness_svc = get_readiness_service()
     target_date = date.fromisoformat(date_str) if isinstance(date_str, str) and date_str else date(2026, 7, 15)
     bu = business_unit if isinstance(business_unit, str) and business_unit else None
+    vd = vendor if isinstance(vendor, str) and vendor else None
 
     try:
         readiness_list = await readiness_svc.get_all_shift_readiness(
             business_unit=bu,
             trip_date=target_date,
+            vendor=vd,
         )
         return [r.model_dump() for r in readiness_list]
     except Exception as e:
+        return []
+
+
+@router.get("/vendors")
+async def get_vendors(
+    business_unit: str = Query(default="", description="Filter by business unit"),
+    date_str: str = Query(default="", alias="date", description="Date YYYY-MM-DD"),
+):
+    """Get the distinct list of vendors operating on a given date, for filter UIs."""
+    trip_repo = get_trip_repo()
+    target_date = date.fromisoformat(date_str) if isinstance(date_str, str) and date_str else date(2026, 7, 15)
+
+    try:
+        metrics = await trip_repo.get_vendor_metrics(
+            business_unit=business_unit or "",
+            start_date=target_date,
+            end_date=target_date,
+        )
+        return sorted({m["vendor"] for m in metrics if m.get("vendor")})
+    except Exception:
         return []
 
 

@@ -63,6 +63,19 @@ export interface Situation {
   last_seen: string;
   supporting_episode_ids: string[];
   historical_context: Record<string, any>;
+  investigation?: SituationInvestigation | null;
+}
+
+export interface SituationInvestigation {
+  summary: string;
+  why_it_matters: string;
+  historical_comparison: string;
+  contributing_factors: { factor: string; evidence_type: string }[];
+  recommended_action: string;
+  alternative_actions: string[];
+  confidence: string;
+  data_quality_notes: string;
+  mode?: string;
 }
 
 export interface AlertEpisode {

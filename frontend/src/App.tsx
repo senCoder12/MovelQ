@@ -3,7 +3,6 @@ import Layout from './components/Layout';
 import HomePage from './features/home/HomePage';
 import SituationsPage from './features/situations/SituationsPage';
 import SituationDetail from './features/situations/SituationDetail';
-import ReadinessPage from './features/readiness/ReadinessPage';
 import DecisionsPage from './features/decisions/DecisionsPage';
 import RoutesPage from './features/routes/RoutesPage';
 import ReportsPage from './features/reports/ReportsPage';
@@ -16,7 +15,6 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/situations" element={<SituationsPage />} />
         <Route path="/situations/:id" element={<SituationDetail />} />
-        <Route path="/readiness" element={<ReadinessPage />} />
         <Route path="/decisions" element={<DecisionsPage />} />
         <Route path="/routes" element={<RoutesPage />} />
         <Route path="/reports" element={<ReportsPage />} />

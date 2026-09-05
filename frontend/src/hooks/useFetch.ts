@@ -12,6 +12,7 @@ export function useFetch<T>(fetchFn: () => Promise<T>, deps: any[] = [], interva
   const [error, setError] = useState<Error | null>(null);
   const fetchFnRef = useRef(fetchFn);
   fetchFnRef.current = fetchFn;
+  const runRef = useRef<(isInitial: boolean) => void>(() => {});
 
   useEffect(() => {
     let mounted = true;
@@ -23,6 +24,7 @@ export function useFetch<T>(fetchFn: () => Promise<T>, deps: any[] = [], interva
         .catch(err => { if (mounted) { setError(err); } })
         .finally(() => { if (mounted && isInitial) setLoading(false); });
     };
+    runRef.current = run;
 
     run(true);
 
@@ -32,5 +34,7 @@ export function useFetch<T>(fetchFn: () => Promise<T>, deps: any[] = [], interva
     return () => { mounted = false; clearInterval(id); };
   }, deps);
 
-  return { data, loading, error };
+  const refetch = () => runRef.current(false);
+
+  return { data, loading, error, refetch };
 }

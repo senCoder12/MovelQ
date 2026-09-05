@@ -1,6 +1,28 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api } from '../../services/api';
 import { Send, Bot, User } from 'lucide-react';
+
+const markdownComponents = {
+  p: ({ children }: any) => <p className="mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }: any) => <strong className="font-semibold text-gray-900">{children}</strong>,
+  h1: ({ children }: any) => <h3 className="text-sm font-bold text-gray-900 mt-3 mb-1.5 first:mt-0">{children}</h3>,
+  h2: ({ children }: any) => <h3 className="text-sm font-bold text-gray-900 mt-3 mb-1.5 first:mt-0">{children}</h3>,
+  h3: ({ children }: any) => <h4 className="text-sm font-bold text-gray-900 mt-2 mb-1 first:mt-0">{children}</h4>,
+  ul: ({ children }: any) => <ul className="list-disc pl-5 space-y-1 mb-2">{children}</ul>,
+  ol: ({ children }: any) => <ol className="list-decimal pl-5 space-y-1 mb-2">{children}</ol>,
+  li: ({ children }: any) => <li>{children}</li>,
+  code: ({ children }: any) => <code className="bg-gray-200 rounded px-1 py-0.5 text-xs font-mono">{children}</code>,
+  table: ({ children }: any) => (
+    <div className="overflow-x-auto mb-2">
+      <table className="min-w-full text-xs border border-gray-200">{children}</table>
+    </div>
+  ),
+  thead: ({ children }: any) => <thead className="bg-gray-100">{children}</thead>,
+  th: ({ children }: any) => <th className="px-2 py-1 text-left font-semibold border-b border-gray-200">{children}</th>,
+  td: ({ children }: any) => <td className="px-2 py-1 border-b border-gray-100">{children}</td>,
+};
 
 export default function AskMovePage() {
   const [query, setQuery] = useState('');
@@ -41,10 +63,16 @@ export default function AskMovePage() {
                 <Bot className="w-5 h-5 text-blue-600" />
               </div>
             )}
-            <div className={`px-4 py-3 rounded-lg max-w-[80%] ${
+            <div className={`px-4 py-3 rounded-lg max-w-[80%] text-sm ${
               msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-900 rounded-bl-none'
             }`}>
-              {msg.text}
+              {msg.role === 'ai' ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {msg.text}
+                </ReactMarkdown>
+              ) : (
+                msg.text
+              )}
             </div>
             {msg.role === 'user' && (
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
