@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { ActionsAuditPageComponent } from './features/actions/audit/actions-audit-page.component';
 import { AuditPageComponent } from './features/audit/audit-page.component';
+import { DispatchHistoryPageComponent } from './features/reports/history/dispatch-history-page.component';
 import { BriefPageComponent } from './features/brief/brief-page.component';
 import { DataQualityPageComponent } from './features/data-quality/data-quality-page.component';
 import { InsightsPageComponent } from './features/insights/insights-page.component';
@@ -19,6 +20,11 @@ export const routes: Routes = [
     path: 'reports/leadership',
     component: LeadershipPackPageComponent,
     data: { viewTitle: 'Reports' },
+  },
+  {
+    path: 'reports/history',
+    component: DispatchHistoryPageComponent,
+    data: { viewTitle: 'Dispatch history' },
   },
   {
     path: 'data-quality',

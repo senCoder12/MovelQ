@@ -1,0 +1,61 @@
+<div class="dispatch-history">
+  @if (error(); as message) {
+    <p class="status status--error">{{ message }}</p>
+  } @else if (dispatches().length === 0 && !loading()) {
+    <p class="status">No leadership-pack dispatches recorded for this tenant yet.</p>
+  } @else {
+    <nz-table #table [nzData]="dispatches()" [nzLoading]="loading()" [nzPageSize]="20" nzSize="small">
+      <thead>
+        <tr>
+          <th nzWidth="28px"></th>
+          <th>Status</th>
+          <th>Period</th>
+          <th>Recipients</th>
+          <th>Transport</th>
+          <th>Dispatched</th>
+          <th>Subject</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (dispatch of table.data; track dispatch.dispatch_id) {
+          <tr>
+            <td
+              [nzShowExpand]="true"
+              [nzExpand]="expanded().has(dispatch.dispatch_id)"
+              (nzExpandChange)="toggleExpand(dispatch.dispatch_id)"
+            ></td>
+            <td>
+              <span class="verdict" [class]="'verdict verdict--' + dispatch.status.toLowerCase()">
+                {{ dispatch.status }}
+              </span>
+            </td>
+            <td class="pulse-mono">{{ dispatch.period }}</td>
+            <td>{{ dispatch.recipients.length }}</td>
+            <td class="pulse-mono">{{ dispatch.transport }}</td>
+            <td class="pulse-mono">{{ dispatch.dispatched_at | date: 'short' }}</td>
+            <td>{{ dispatch.subject }}</td>
+          </tr>
+          @if (expanded().has(dispatch.dispatch_id)) {
+            <tr [nzExpand]="true">
+              <td colspan="7">
+                <div class="detail">
+                  <ul class="detail__recipients">
+                    @for (recipient of dispatch.recipients; track recipient.recipient_id) {
+                      <li>{{ recipient.name }} <span class="pulse-mono">&lt;{{ recipient.email }}&gt;</span></li>
+                    }
+                  </ul>
+                  @if (dispatch.error_summary) {
+                    <p class="detail__error"><strong>Error:</strong> {{ dispatch.error_summary }}</p>
+                  }
+                  <p class="detail__label">Exact rendered HTML, as stored at dispatch time</p>
+                  <app-email-html-frame [html]="dispatch.body_html" [width]="520" [height]="420" />
+                  <p class="detail__hash pulse-mono">content_hash {{ dispatch.content_hash }}</p>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </nz-table>
+  }
+</div>

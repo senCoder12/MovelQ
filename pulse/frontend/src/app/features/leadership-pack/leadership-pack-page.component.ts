@@ -1,25 +1,28 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 
 import { LeadershipService } from '../../core/leadership.service';
-import { LeadershipPack } from '../../core/leadership.model';
+import { DispatchApiResponse, DispatchView, LeadershipPack } from '../../core/leadership.model';
 import { ShellService } from '../../core/shell.service';
 import { TenantService } from '../../core/tenant.service';
+import { SendReportDrawerComponent } from '../reports/send/send-report-drawer.component';
 
 type SeverityBand = 'low' | 'medium' | 'high';
 
 @Component({
   selector: 'app-leadership-pack-page',
   standalone: true,
-  imports: [NzIconModule, DatePipe, DecimalPipe],
+  imports: [NzIconModule, DatePipe, DecimalPipe, SendReportDrawerComponent],
   templateUrl: './leadership-pack-page.component.html',
   styleUrl: './leadership-pack-page.component.css',
 })
 export class LeadershipPackPageComponent {
   private readonly leadershipService = inject(LeadershipService);
   private readonly notification = inject(NzNotificationService);
+  private readonly router = inject(Router);
   private readonly shell = inject(ShellService);
   private readonly tenants = inject(TenantService);
 
@@ -28,12 +31,38 @@ export class LeadershipPackPageComponent {
   readonly error = signal<string | null>(null);
   readonly generatedAt = signal<Date | null>(null);
 
+  readonly sendDrawerVisible = signal(false);
+  /** The most recent dispatch for the period on screen -- seeded from
+   * history on load, then updated in place the instant a new one is
+   * recorded, so the chip survives a reload without a second endpoint. */
+  readonly latestDispatch = signal<DispatchView | null>(null);
+
+  /** Exposed for the send drawer's [period] binding -- templates cannot
+   * reach a private field, and the drawer needs to know which period it is
+   * sending. */
+  readonly period = computed(() => this.shell.period());
+
   readonly eyebrow = computed(() => {
     const pack = this.pack();
     if (!pack) {
       return '';
     }
     return `Mobility operations · ${pack.period} · ${pack.scope.sites.join(', ')}`;
+  });
+
+  readonly dispatchChipLabel = computed(() => {
+    const dispatch = this.latestDispatch();
+    if (!dispatch) {
+      return null;
+    }
+    const time = new Date(dispatch.dispatched_at).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const verb = dispatch.status === 'FAILED' ? 'Failed' : dispatch.transport === 'smtp' ? 'Sent' : 'Recorded';
+    const count = dispatch.recipients.length;
+    return `${verb} ${time} · ${count} recipient${count === 1 ? '' : 's'}`;
   });
 
   constructor() {
@@ -60,6 +89,7 @@ export class LeadershipPackPageComponent {
         this.generatedAt.set(new Date());
         this.loading.set(false);
         this.shell.loading.set(false);
+        this.loadLatestDispatch();
       },
       error: (err) => {
         this.pack.set(null);
@@ -68,6 +98,31 @@ export class LeadershipPackPageComponent {
         this.shell.loading.set(false);
       },
     });
+  }
+
+  private loadLatestDispatch(): void {
+    this.leadershipService.getDispatchHistory(this.shell.period()).subscribe({
+      next: (dispatches) => this.latestDispatch.set(dispatches[0] ?? null),
+      // No toast on failure -- the chip just stays absent, which is the
+      // same as "never dispatched" from the operator's point of view.
+      error: () => this.latestDispatch.set(null),
+    });
+  }
+
+  openSendDrawer(): void {
+    this.sendDrawerVisible.set(true);
+  }
+
+  closeSendDrawer(): void {
+    this.sendDrawerVisible.set(false);
+  }
+
+  onDispatched(response: DispatchApiResponse): void {
+    this.latestDispatch.set(response.dispatch);
+  }
+
+  openHistory(): void {
+    this.router.navigateByUrl('/reports/history');
   }
 
   severityBand(severity: number): SeverityBand {
@@ -91,9 +146,6 @@ export class LeadershipPackPageComponent {
     );
   }
 
-  send(): void {
-    this.notification.info('Not wired up yet', 'Sending leadership packs is out of scope for this build.');
-  }
 }
 
 function toPlainText(pack: LeadershipPack): string {

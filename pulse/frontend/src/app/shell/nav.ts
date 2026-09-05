@@ -16,6 +16,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Fleet vendors', path: '/vendors', icon: 'bank', section: 'Management' },
   { label: 'Audit trail', path: '/audit', icon: 'clock-circle', section: 'Management' },
   { label: 'Action approvals', path: '/actions/audit', icon: 'send', section: 'Management' },
+  { label: 'Dispatch history', path: '/reports/history', icon: 'history', section: 'Management' },
 ];
 
 /** Rail groups in render order: the unlabelled primary block, then each section. */

@@ -1,0 +1,177 @@
+<ng-template #duplicateTpl>
+  <div class="dup-notice">
+    <p class="dup-notice__text">
+      An identical dispatch was already recorded within the last hour -- nothing new was sent.
+    </p>
+    <button type="button" class="dup-notice__link" (click)="viewHistory()">View existing record in history</button>
+  </div>
+</ng-template>
+
+<nz-drawer [nzVisible]="visible()" nzTitle="Send leadership pack" [nzWidth]="560" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <div class="send-drawer">
+      <ol class="send-drawer__steps">
+        <li [class.send-drawer__step--active]="step() === 1" [class.send-drawer__step--done]="step() > 1">
+          1&nbsp;&middot;&nbsp;Recipients
+        </li>
+        <li [class.send-drawer__step--active]="step() === 2" [class.send-drawer__step--done]="step() > 2">
+          2&nbsp;&middot;&nbsp;Preview
+        </li>
+        <li [class.send-drawer__step--active]="step() === 3">3&nbsp;&middot;&nbsp;Confirm</li>
+      </ol>
+
+      @if (step() === 1) {
+        <section class="send-drawer__body">
+          @if (recipientsLoading()) {
+            <p class="send-drawer__status">Loading recipients&hellip;</p>
+          } @else {
+            @for (group of groups(); track group.role) {
+              <div class="recipient-group">
+                <h4 class="recipient-group__label">{{ group.label }}</h4>
+                @for (recipient of group.recipients; track recipient.recipient_id) {
+                  <label class="recipient-row">
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(recipient.recipient_id)"
+                      (change)="toggleRecipient(recipient.recipient_id)"
+                    />
+                    <span class="recipient-row__name">{{ recipient.name }}</span>
+                    <span class="recipient-row__email pulse-mono">{{ recipient.email }}</span>
+                  </label>
+                }
+              </div>
+            }
+
+            <div class="send-drawer__field">
+              <label class="send-drawer__label" for="send-note">Add a line for the recipients</label>
+              <textarea
+                id="send-note"
+                class="send-drawer__textarea"
+                rows="2"
+                placeholder="Optional -- shown alongside the dispatch record, not in the email itself"
+                [ngModel]="note()"
+                (ngModelChange)="note.set($event)"
+              ></textarea>
+            </div>
+          }
+        </section>
+      }
+
+      @if (step() === 2) {
+        <section class="send-drawer__body">
+          @if (preview(); as p) {
+            <div class="send-drawer__field">
+              <label class="send-drawer__label" for="send-subject">Subject</label>
+              <input
+                id="send-subject"
+                type="text"
+                class="send-drawer__input"
+                [ngModel]="subject()"
+                (ngModelChange)="subject.set($event)"
+              />
+            </div>
+
+            <div class="preview-toggle">
+              <button
+                type="button"
+                class="preview-toggle__btn"
+                [class.preview-toggle__btn--active]="!showPlainText()"
+                (click)="showPlainText.set(false)"
+              >
+                Rendered email
+              </button>
+              <button
+                type="button"
+                class="preview-toggle__btn"
+                [class.preview-toggle__btn--active]="showPlainText()"
+                (click)="showPlainText.set(true)"
+              >
+                Plain text
+              </button>
+            </div>
+
+            <p class="send-drawer__hint">
+              <span nz-icon nzType="eye" class="send-drawer__hint-icon"></span>
+              This is the email-rendered version, not the on-screen pack -- it is exactly what the recipient would see.
+            </p>
+
+            @if (showPlainText()) {
+              <pre class="send-drawer__plaintext">{{ p.body_text }}</pre>
+            } @else {
+              <app-email-html-frame [html]="p.body_html" [width]="520" [height]="420" />
+            }
+          } @else if (previewLoading()) {
+            <p class="send-drawer__status">Rendering preview&hellip;</p>
+          } @else if (previewError()) {
+            <p class="send-drawer__status send-drawer__status--error">{{ previewError() }}</p>
+            <button type="button" class="send-drawer__btn send-drawer__btn--ghost" (click)="retryPreview()">
+              Retry
+            </button>
+          }
+        </section>
+      }
+
+      @if (step() === 3) {
+        <section class="send-drawer__body">
+          <div class="confirm-summary">
+            <p class="confirm-summary__line">
+              <strong>{{ selectedCount() }}</strong> recipient{{ selectedCount() === 1 ? '' : 's' }} &middot;
+              {{ period() }}
+            </p>
+            <p class="confirm-summary__subject pulse-mono">{{ subject() }}</p>
+            <ul class="confirm-summary__recipients">
+              @for (recipient of selectedRecipients(); track recipient.recipient_id) {
+                <li>{{ recipient.name }} <span class="pulse-mono">&lt;{{ recipient.email }}&gt;</span></li>
+              }
+            </ul>
+            @if (note().trim()) {
+              <p class="confirm-summary__note"><strong>Note:</strong> {{ note() }}</p>
+            }
+            <p class="confirm-summary__transport">
+              Transport: <span class="pulse-mono">{{ transport() }}</span>
+              @if (transport() === 'logged') {
+                &mdash; this records the dispatch; no email is actually sent.
+              }
+            </p>
+          </div>
+        </section>
+      }
+
+      <footer class="send-drawer__footer">
+        @if (step() === 1) {
+          <span></span>
+          <button
+            type="button"
+            class="send-drawer__btn send-drawer__btn--primary"
+            [disabled]="!canProceedFromStep1()"
+            (click)="goToPreview()"
+          >
+            Next
+          </button>
+        }
+        @if (step() === 2) {
+          <button type="button" class="send-drawer__btn send-drawer__btn--ghost" (click)="backTo(1)">Back</button>
+          <button
+            type="button"
+            class="send-drawer__btn send-drawer__btn--primary"
+            [disabled]="!preview()"
+            (click)="goToConfirm()"
+          >
+            Next
+          </button>
+        }
+        @if (step() === 3) {
+          <button type="button" class="send-drawer__btn send-drawer__btn--ghost" (click)="backTo(2)">Back</button>
+          <button
+            type="button"
+            class="send-drawer__btn send-drawer__btn--primary"
+            [disabled]="dispatching()"
+            (click)="dispatch()"
+          >
+            {{ dispatching() ? 'Working…' : confirmLabel() }}
+          </button>
+        }
+      </footer>
+    </div>
+  </ng-container>
+</nz-drawer>

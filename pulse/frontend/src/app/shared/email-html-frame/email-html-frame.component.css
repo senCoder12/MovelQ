@@ -1,0 +1,7 @@
+.email-html-frame {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: #ffffff;
+}
