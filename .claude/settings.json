@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv *)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --no-sandbox --window-size=1600,1000 --virtual-time-budget=8000 --screenshot=/private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/situations_initial.png http://localhost:5173/situations)",
+      "Bash(curl -s \"http://localhost:8000/api/v1/situations\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -sD - \"http://localhost:8000/api/v1/situations\" -o /dev/null)",
+      "Bash(curl -sD - \"http://localhost:5173/api/v1/situations\" -o /tmp/via_proxy.json)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/tmp/via_proxy.json'\\)\\); print\\('count via proxy:', len\\(d\\) if isinstance\\(d,list\\) else 'not a list:', d if not isinstance\\(d,list\\) else ''\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(./backend/.venv/bin/python3 -c \"import websockets, requests\")",
+      "Bash(pip3 list *)",
+      "Bash(./backend/.venv/bin/python3 -c \"import requests\")",
+      "Bash(./backend/.venv/bin/python3 -c \"import websockets; print\\('websockets OK'\\)\")",
+      "Bash(./backend/.venv/bin/python3 -c \"import urllib.request; print\\('urllib OK'\\)\")",
+      "Bash(./backend/.venv/bin/python3 /private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/cdp_test.py)",
+      "Bash(curl -s http://localhost:9222/json)",
+      "Bash(./backend/.venv/bin/python3 /private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/cdp_rescan.py)",
+      "Bash(./backend/.venv/bin/python3 /private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/cdp_diag.py)",
+      "Bash(./backend/.venv/bin/python3 /private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/cdp_diag2.py)",
+      "Bash(./backend/.venv/bin/python3 /private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/cdp_diag3.py)",
+      "Bash(./backend/.venv/bin/python3 /private/tmp/claude-501/-Users-sachinmaskalle-MovelQ/15c53c6e-0df0-4f41-b33e-d475d6454dde/scratchpad/cdp_final_shot.py)",
+      "Bash(lsof -ti:9222 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)"
+    ]
+  }
+}

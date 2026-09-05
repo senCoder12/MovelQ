@@ -6,6 +6,17 @@
 -- Nothing here is allowed to reject a row. Cleaning happens on
 -- the way OUT of staging, not on the way in. This is what lets
 -- you load messy CSVs once and then profile them with SQL.
+--
+-- Rule: NO TABLE IN THIS FILE IS EVER DROPPED. staging.alerts_data
+-- carries a live trigger (05_alert_stream_trigger.sql) that must
+-- survive every re-run of this file; DROP TABLE would take the
+-- trigger down with it. All CREATE statements below are
+-- IF NOT EXISTS, so re-running this file is a safe no-op once the
+-- tables exist. To reload a specific batch of the bulk-CSV tables
+-- (ride_data_trip, emp_data, trip_feedback, bill_data), the loader
+-- script should target the batch directly, e.g.
+--   DELETE FROM staging.ride_data_trip WHERE source_file = 'may_2026';
+-- rather than truncating or dropping the whole table.
 -- =============================================================
 
 CREATE SCHEMA IF NOT EXISTS staging;
@@ -15,8 +26,7 @@ CREATE SCHEMA IF NOT EXISTS staging;
 -- table. source_file records which month a row came from, so a
 -- month can be reloaded independently.
 -- -------------------------------------------------------------
-DROP TABLE IF EXISTS staging.ride_data_trip;
-CREATE TABLE staging.ride_data_trip (
+CREATE TABLE IF NOT EXISTS staging.ride_data_trip (
     business_unit             text,
     office                    text,
     product_type              text,
@@ -49,8 +59,7 @@ CREATE TABLE staging.ride_data_trip (
     loaded_at                 timestamptz DEFAULT now()
 );
 
-DROP TABLE IF EXISTS staging.emp_data;
-CREATE TABLE staging.emp_data (
+CREATE TABLE IF NOT EXISTS staging.emp_data (
     business_unit         text,
     office                text,
     product_type          text,
@@ -73,8 +82,7 @@ CREATE TABLE staging.emp_data (
     loaded_at             timestamptz DEFAULT now()
 );
 
-DROP TABLE IF EXISTS staging.trip_feedback;
-CREATE TABLE staging.trip_feedback (
+CREATE TABLE IF NOT EXISTS staging.trip_feedback (
     business_unit   text,
     trip_id         text,
     trip_type       text,
@@ -89,8 +97,7 @@ CREATE TABLE staging.trip_feedback (
     loaded_at       timestamptz DEFAULT now()
 );
 
-DROP TABLE IF EXISTS staging.alerts_data;
-CREATE TABLE staging.alerts_data (
+CREATE TABLE IF NOT EXISTS staging.alerts_data (
     business_unit     text,
     trip_id           text,
     stwid             text,
@@ -104,8 +111,7 @@ CREATE TABLE staging.alerts_data (
     loaded_at         timestamptz DEFAULT now()
 );
 
-DROP TABLE IF EXISTS staging.bill_data;
-CREATE TABLE staging.bill_data (
+CREATE TABLE IF NOT EXISTS staging.bill_data (
     business_unit   text,
     office          text,
     vendor          text,
