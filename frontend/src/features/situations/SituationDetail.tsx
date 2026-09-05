@@ -85,7 +85,7 @@ export default function SituationDetail() {
               <p className="text-gray-800 mb-3">{sit.investigation.summary}</p>
               <p className="text-sm text-gray-600 mb-3"><strong>Why it matters:</strong> {sit.investigation.why_it_matters}</p>
               <p className="text-sm text-gray-600 mb-4"><strong>Historical comparison:</strong> {sit.investigation.historical_comparison}</p>
-              {sit.investigation.contributing_factors.length > 0 && (
+              {(sit.investigation.contributing_factors?.length ?? 0) > 0 && (
                 <ul className="text-sm text-gray-600 list-disc list-inside mb-4 space-y-1">
                   {sit.investigation.contributing_factors.map((f, i) => (
                     <li key={i}>{f.factor} <span className="text-xs text-gray-400">({f.evidence_type})</span></li>

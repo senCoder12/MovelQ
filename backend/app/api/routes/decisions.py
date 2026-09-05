@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import get_decision_service, get_situation_service
@@ -21,15 +23,19 @@ async def get_decisions(
         business_unit=business_unit or None
     )
 
-    decisions = []
-    for situation in situations:
+    # generate_decision is timeout-guarded per call (see DecisionService's
+    # _LLM_TIMEOUT_SECONDS), but run one situation at a time that still adds
+    # up to N * timeout in the worst case. Fan them out concurrently instead
+    # so the whole page waits on the single slowest call, not the sum of all.
+    async def _build(situation):
         try:
             decision = await decision_svc.generate_decision(situation)
-            decisions.append({
+            return {
                 "situation": situation.model_dump(),
                 "decision": decision.model_dump(),
-            })
+            }
         except Exception:
-            continue
+            return None
 
-    return decisions
+    results = await asyncio.gather(*(_build(s) for s in situations))
+    return [r for r in results if r is not None]

@@ -126,9 +126,16 @@ class EvidenceService:
             "confidence_score": situation.confidence,
         }
 
-        # Hash and versioning
+        # Hash and versioning. `status` is deliberately excluded: it's
+        # workflow metadata that this very request path mutates as a side
+        # effect (mark_action_recommended flips DETECTED -> ACTION_RECOMMENDED
+        # right after a decision/investigation is generated), so including it
+        # would change the hash out from under the cache entry just written
+        # during seeding, turning every situation's first page view into a
+        # guaranteed cache miss and a fresh, slow LLM call.
+        situation_data_for_hash = {k: v for k, v in situation_data.items() if k != "status"}
         payload_for_hashing = {
-            "sit": situation_data,
+            "sit": situation_data_for_hash,
             "state": current_state,
             "hist": historical_context,
         }

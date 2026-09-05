@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from datetime import datetime
@@ -13,6 +14,11 @@ from app.config import get_settings
 from app.domain.entities import ActionOption, Decision, Situation
 from app.domain.enums import ActionType, EvidenceType, SituationType
 from app.domain.interfaces import BaselineRepository, DecisionRepository, LLMProvider
+
+# Matches AgentService's guard: a stalled LLM call must fall back to the
+# deterministic decision, not hang the request (or, in bulk callers like
+# GET /decisions, every request behind it in the same sequential loop).
+_LLM_TIMEOUT_SECONDS = 25
 
 logger = structlog.get_logger(__name__)
 
@@ -76,11 +82,14 @@ class DecisionService:
         prompt = DECISION_GENERATION_PROMPT.format(evidence_json=evidence_json)
 
         try:
-            raw_response = await self.llm_provider.generate(
-                prompt=prompt,
-                system_prompt=SYSTEM_PROMPT,
-                temperature=self.settings.llm_temperature,
-                max_tokens=self.settings.llm_max_tokens,
+            raw_response = await asyncio.wait_for(
+                self.llm_provider.generate(
+                    prompt=prompt,
+                    system_prompt=SYSTEM_PROMPT,
+                    temperature=self.settings.llm_temperature,
+                    max_tokens=self.settings.llm_max_tokens,
+                ),
+                timeout=_LLM_TIMEOUT_SECONDS,
             )
             if not raw_response:
                 return None

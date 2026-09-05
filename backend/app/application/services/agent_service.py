@@ -71,10 +71,11 @@ class AgentService:
         evidence_json = json.dumps(packet.model_dump(), indent=2, default=str)
         prompt = SITUATION_INVESTIGATION_PROMPT.format(evidence_json=evidence_json)
 
-        # 4. Invoke LLM with fallback
+        # 4. Invoke LLM with fallback (timeout-guarded so a stalled call can't
+        # hang the request -- falls straight to the deterministic template).
         try:
-            raw_response = await self.llm_provider.generate(
-                prompt=prompt,
+            raw_response = await self._generate(
+                prompt,
                 system_prompt=SYSTEM_PROMPT,
                 temperature=self.settings.llm_temperature,
                 max_tokens=self.settings.llm_max_tokens,
@@ -90,8 +91,9 @@ class AgentService:
             # strict=False: Gemini/GPT JSON responses sometimes contain raw
             # newlines inside string values, which the strict JSON grammar rejects.
             parsed = json.loads(clean_text, strict=False)
-            self._llm_cache[cache_key] = parsed
-            return parsed
+            investigation = self._validate_investigation(parsed)
+            self._llm_cache[cache_key] = investigation
+            return investigation
 
         except Exception as e:
             logger.warning("agent.llm_fallback_triggered", error=str(e))
@@ -99,6 +101,37 @@ class AgentService:
             fallback = self._generate_template_investigation(situation)
             self._llm_cache[cache_key] = fallback
             return fallback
+
+    @staticmethod
+    def _validate_investigation(parsed: Dict[str, Any]) -> Dict[str, Any]:
+        """Enforce the shape the frontend renders, same as DecisionService does for decisions.
+
+        The LLM's JSON is unchecked otherwise -- a model that omits a field
+        (e.g. contributing_factors) would ship straight to the client, which
+        crashes rendering it (no schema, no default) since nothing here ever
+        validated the contract. Raising sends the caller to the deterministic
+        template instead of a half-shaped response.
+        """
+        required_str_fields = (
+            "summary", "why_it_matters", "historical_comparison",
+            "recommended_action", "confidence", "data_quality_notes",
+        )
+        for field in required_str_fields:
+            if not isinstance(parsed.get(field), str):
+                raise ValueError(f"investigation missing/invalid field: {field}")
+
+        contributing_factors = parsed.get("contributing_factors")
+        if not isinstance(contributing_factors, list):
+            raise ValueError("investigation missing/invalid field: contributing_factors")
+        for factor in contributing_factors:
+            if not isinstance(factor, dict) or "factor" not in factor or "evidence_type" not in factor:
+                raise ValueError("investigation contributing_factors entry missing factor/evidence_type")
+
+        alternative_actions = parsed.get("alternative_actions")
+        if not isinstance(alternative_actions, list):
+            raise ValueError("investigation missing/invalid field: alternative_actions")
+
+        return parsed
 
     def _generate_template_investigation(self, situation: Situation) -> Dict[str, Any]:
         emp_cnt = situation.impact.affected_employees
