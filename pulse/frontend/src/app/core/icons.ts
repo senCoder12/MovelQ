@@ -6,6 +6,7 @@ import {
   CalendarOutline,
   CheckOutline,
   ClockCircleOutline,
+  CloseOutline,
   CopyOutline,
   DownOutline,
   EnterOutline,
@@ -55,6 +56,7 @@ export const PULSE_ICONS = [
   RightOutline,
   HistoryOutline,
   CheckOutline,
+  CloseOutline,
   EyeOutline,
   // Leadership pack.
   CopyOutline,

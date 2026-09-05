@@ -251,6 +251,32 @@
   font-size: 11px;
 }
 
+.card__cta:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* A decided action: the button stays in place (never removed -- that's the
+   demo moment) but settles into a muted, non-interactive state instead of
+   the accent CTA. */
+.card__cta--decided {
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-muted);
+  cursor: default;
+}
+
+.card__cta--decided:hover {
+  filter: none;
+}
+
+.card__cta--decided .card__cta-arrow {
+  color: var(--pulse-ok-text);
+}
+
+.card__cta--decided.card__cta--rejected .card__cta-arrow {
+  color: var(--pulse-danger-text);
+}
+
 .card__secondary {
   margin-top: var(--pulse-space-3);
   padding: 0;
