@@ -30,6 +30,7 @@ from typing import Any, Callable
 
 from app.agent import validator
 from app.agent.json_llm import parse_json_object
+from app.config import get_settings
 from app.llm import client as llm_client
 
 ACTION_TYPES = ("VENDOR_ESCALATION", "SYSTEM_AUDIT_REQUEST", "ESCORT_COVERAGE_REVIEW", "BILLING_RECONCILIATION")
@@ -430,6 +431,10 @@ def _prompt_template() -> str:
 
 def _call_llm(insight: dict[str, Any], action_type: str, context: dict[str, Any],
               feedback: str | None = None) -> dict[str, Any] | None:
+    if not get_settings().llm_enabled:
+        # Declared degraded mode: _author falls through to the templated
+        # body_fallback built from facts_cited, at confidence "low".
+        return None
     payload = {
         "type": action_type,
         "insight": insight,

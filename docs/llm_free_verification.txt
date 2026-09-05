@@ -1,0 +1,24 @@
+SIGNAL GENERATION LLM-FREE VERIFICATION
+---------------------------------------
+Static import guard           FAIL  (4 checks, 0 violations)
+Runtime interception          FAIL  (5 stages, 1 unavailable)
+Confirmed figures reproduced  FAIL  (1/6 within tolerance)
+':16' ranks first             FAIL
+Degraded mode scan            PASS  (6 checks, 0 model calls)
+Alert parity across modes     FAIL  (1 of 2 comparisons available)
+Java job degradation          FAIL  (5/6 checks)
+
+FAILING CHECKS
+--------------
+  Static import guard: tests/test_no_llm_imports.py::test_guarded_package_exists[app.attribute]
+  Runtime interception: tests/test_signal_generation_offline.py::test_stage5_alert_rule_evaluation_offline
+  Confirmed figures reproduced: tests/test_signal_generation_offline.py::test_figure_delay_gap_on_suffix_16
+  Confirmed figures reproduced: tests/test_signal_generation_offline.py::test_figure_n_for_suffix_16
+  Confirmed figures reproduced: tests/test_signal_generation_offline.py::test_figure_next_worst_suffix
+  Confirmed figures reproduced: tests/test_signal_generation_offline.py::test_figure_fleet_delay_unreported_trips
+  Confirmed figures reproduced: tests/test_signal_generation_offline.py::test_figure_female_night_legs_without_escort
+  ':16' ranks first: tests/test_signal_generation_offline.py::test_suffix_16_signal_ranks_first
+  Alert parity across modes: tests/test_degraded_mode.py::test_missing_alert_parity
+  Java job degradation: NoLlmInSignalPathTest.scanRunPartialStatusExists
+
+generated 2026-09-05T11:20:01+00:00

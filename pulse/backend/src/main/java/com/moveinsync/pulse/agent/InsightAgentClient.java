@@ -32,8 +32,21 @@ public class InsightAgentClient {
         this.restClient = agentRestClient;
     }
 
-    public List<InsightPacket> listInsights() {
-        InsightPacket[] body = withRetry(() -> restClient.get().uri("/insights").retrieve().body(InsightPacket[].class));
+    /** Tenants the agent can detect for, read from the warehouse. Lets the refresh job
+     * cover every tenant without a hardcoded list going stale. */
+    public List<String> listTenants() {
+        String[] body = withRetry(() -> restClient.get().uri("/tenants").retrieve().body(String[].class));
+        return body == null ? List.of() : List.of(body);
+    }
+
+    /** Runs detection for one tenant. This is a warehouse scan, not a lookup -- seconds,
+     * not milliseconds -- which is why it is called by the sync job and never on the path
+     * of a user request. */
+    public List<InsightPacket> listInsights(String tenantId) {
+        InsightPacket[] body = withRetry(() -> restClient.get()
+                .uri(builder -> builder.path("/insights").queryParam("tenant_id", tenantId).build())
+                .retrieve()
+                .body(InsightPacket[].class));
         return body == null ? List.of() : List.of(body);
     }
 

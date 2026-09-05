@@ -6,11 +6,13 @@ import com.moveinsync.pulse.agent.dto.InsightPacket;
 import com.moveinsync.pulse.agent.dto.TraceEntry;
 import com.moveinsync.pulse.agent.dto.TraceResponse;
 import com.moveinsync.pulse.insight.InsightQueryService;
+import com.moveinsync.pulse.insight.InsightSyncService;
 import com.moveinsync.pulse.web.DataQualityResponse.Entry;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,9 +25,26 @@ import org.springframework.web.server.ResponseStatusException;
 public class InsightController {
 
     private final InsightQueryService insights;
+    private final InsightSyncService sync;
+    private final TenantContext tenantContext;
 
-    public InsightController(InsightQueryService insights) {
+    public InsightController(InsightQueryService insights, InsightSyncService sync, TenantContext tenantContext) {
         this.insights = insights;
+        this.sync = sync;
+        this.tenantContext = tenantContext;
+    }
+
+    /**
+     * Re-runs detection for the calling tenant and persists the result.
+     *
+     * <p>Synchronous, and slow by the standards of everything else here -- it is a warehouse
+     * scan followed by a write per insight. That is why it is its own endpoint rather than
+     * something the brief does on a cache miss: refreshing is an operator action, reading is
+     * not.
+     */
+    @PostMapping("/insights/refresh")
+    public InsightSyncService.SyncResult refresh() {
+        return sync.sync(tenantContext.requireTenantId());
     }
 
     @GetMapping("/insights/{id}")

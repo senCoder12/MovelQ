@@ -27,6 +27,7 @@ from fastapi import APIRouter
 
 from app.agent import validator
 from app.agent.json_llm import parse_json_object
+from app.config import get_settings
 from app.llm import client as llm_client
 
 router = APIRouter(prefix="/internal", tags=["internal"])
@@ -45,6 +46,9 @@ def _cache_key(payload: dict[str, Any]) -> str:
 
 
 def _call_llm(payload: dict[str, Any], feedback: str | None = None) -> dict[str, Any] | None:
+    if not get_settings().llm_enabled:
+        # Declared degraded mode: no dial-out, no tokens, straight to _fallback.
+        return None
     prompt = _prompt_template() + "\n\n## Input\n\n" + json.dumps(payload, indent=2)
     if feedback:
         prompt += f"\n\n## Correction required\n\n{feedback}"

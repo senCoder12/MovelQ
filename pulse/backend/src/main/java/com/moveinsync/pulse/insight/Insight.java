@@ -41,6 +41,9 @@ import org.hibernate.type.SqlTypes;
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class Insight {
 
+    public static final String SOURCE_SEED = "seed";
+    public static final String SOURCE_AGENT = "agent";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -111,6 +114,12 @@ public class Insight {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "coincident_events", nullable = false, columnDefinition = "jsonb")
     private List<CoincidentEvent> coincidentEvents = new ArrayList<>();
+
+    /** "agent" for a generated insight, "seed" for a demo fixture. The sync only ever
+     * deletes its own output, so a stale generated insight disappears while the seed
+     * fallback survives. */
+    @Column(name = "source", nullable = false, length = 16)
+    private String source = SOURCE_SEED;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -357,6 +366,14 @@ public class Insight {
 
     public void setCoincidentEvents(List<CoincidentEvent> coincidentEvents) {
         this.coincidentEvents = coincidentEvents == null ? new ArrayList<>() : coincidentEvents;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public Instant getCreatedAt() {

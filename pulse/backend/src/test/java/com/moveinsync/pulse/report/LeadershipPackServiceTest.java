@@ -46,7 +46,7 @@ class LeadershipPackServiceTest {
         }
 
         @Override
-        public List<InsightPacket> listInsights() {
+        public List<InsightPacket> listInsights(String tenantId) {
             return insights;
         }
 

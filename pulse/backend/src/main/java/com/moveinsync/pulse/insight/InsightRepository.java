@@ -74,4 +74,9 @@ public interface InsightRepository extends JpaRepository<Insight, Long> {
     List<BriefRow> findBriefRowsByInsightId(@Param("insightId") String insightId);
 
     boolean existsByInsightId(String insightId);
+
+    /** Everything the sync wrote for this tenant, so it can retire what the agent no
+     * longer reports without touching seeded rows. */
+    @Query("select i from Insight i where i.source = :source")
+    List<Insight> findAllBySource(@Param("source") String source);
 }

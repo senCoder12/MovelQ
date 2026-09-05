@@ -208,6 +208,42 @@ Two of them are worth knowing about:
   is not exactly one. That is a latency guard, not a style rule: every extra statement is
   another round trip to `us-east-2`.
 
+## Where insights come from
+
+```
+CSVs -> ingest -> DuckDB warehouse -> metric compiler -> detect -> agent GET /insights
+                                                                        |
+                                              backend InsightSyncService (upsert)
+                                                                        |
+                                                    Postgres -> GET /api/brief -> UI
+```
+
+Detection ([`agent/app/detect/signals.py`](agent/app/detect/signals.py)) walks the metric
+registry for one tenant and emits an InsightPacket for every metric past its declared
+target: the headline number, attribution across the metric's declared slices, controls by
+leave-one-out, impact, data quality, and the queries behind all of it. No LLM — an insight
+body is read as fact, so every figure in the prose also appears in a structured field.
+
+It runs on the agent, where DuckDB lives, and the backend persists the result. Detection is
+a warehouse scan measured in seconds; the brief has to stay a single indexed read, so the
+two are separated by a sync rather than run on the request path.
+
+Refresh after ingest, or on demand:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=--refresh-insights   # every tenant
+curl -X POST -H 'X-Tenant-Id: catalyst' localhost:8080/api/insights/refresh
+```
+
+The sync upserts on `(tenant_id, insight_id)` and retires what the agent no longer reports.
+It only ever deletes rows it wrote itself (`insight.source = 'agent'`) — seeded fixtures are
+the fallback for when the agent is down, and survive a refresh.
+
+Detection covers metrics whose unit is a rate or ratio and which declare a `warn` target;
+those aggregate correctly over a window by summing numerator and denominator.
+`p90_arrival_delay_min` deliberately does not (a weighted mean of daily p90s is not the
+window's p90) and `cost_per_employee_trip` has no target to breach.
+
 ## Data
 
 Two stores, deliberately:
