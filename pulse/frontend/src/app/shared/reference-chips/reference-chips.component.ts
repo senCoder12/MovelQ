@@ -8,8 +8,10 @@ interface FormattedReference extends Reference {
 
 const INR_FORMAT = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
 
-/** Bordered pill per reference (historical/sla/peer/industry/computed), label + value
- * formatted by unit: percent -> "38.2%", minutes -> "9.87 min", inr -> "₹1,200". */
+/** Hairline chip per reference (historical/sla/peer/industry/computed), label + value
+ * formatted by unit: percent -> "38.2%", minutes -> "9.87 min", inr -> "₹1,200".
+ * Rendered inline on one row inside the insight card; the value is a machine
+ * value and so renders monospace. */
 function formatValue(reference: Reference): string {
   const value = reference.value;
   if (typeof value !== 'number') {

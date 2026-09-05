@@ -1,0 +1,38 @@
+@if (error(); as message) {
+  <p class="insights__status insights__status--error">{{ message }}</p>
+} @else if (insights().length === 0 && !loading()) {
+  <p class="insights__status">No insights in this tenant.</p>
+} @else {
+  <table class="pulse-table pulse-table--clickable">
+    <colgroup>
+      <col style="width: 52px" />
+      <col style="width: 220px" />
+      <col style="width: 180px" />
+      <col />
+      <col style="width: 96px" />
+      <col style="width: 116px" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th scope="col">Sev</th>
+        <th scope="col">Metric</th>
+        <th scope="col">Entity</th>
+        <th scope="col">Headline</th>
+        <th scope="col">n</th>
+        <th scope="col">Window</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (insight of insights(); track insight.insight_id) {
+        <tr (click)="open(insight)">
+          <td><app-severity-badge [severity]="insight.severity" /></td>
+          <td class="pulse-mono">{{ insight.metric.id }}</td>
+          <td>{{ insight.entity.name }}</td>
+          <td class="insights__headline">{{ insight.narrative.headline }}</td>
+          <td class="pulse-mono pulse-table__num">{{ count(insight.metric.n) }}</td>
+          <td class="pulse-mono">{{ insight.metric.window }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

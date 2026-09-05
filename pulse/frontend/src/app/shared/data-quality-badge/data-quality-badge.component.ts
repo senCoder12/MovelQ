@@ -10,8 +10,9 @@ import { DataQuality } from '../../core/insight.model';
   imports: [NzIconModule],
   template: `
     <span class="data-quality-badge">
-      <span nz-icon nzType="eye"></span>
-      {{ excludedPct() }}% excluded &middot; confidence {{ dataQuality().confidence }}
+      <span nz-icon nzType="eye" class="data-quality-badge__icon"></span>
+      <span class="data-quality-badge__pct">{{ excludedPct() }}%</span> excluded &middot; confidence
+      <span class="data-quality-badge__confidence">{{ dataQuality().confidence }}</span>
     </span>
   `,
   styleUrl: './data-quality-badge.component.css',

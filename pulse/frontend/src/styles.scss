@@ -1,4 +1,7 @@
-/* Global styles. Page canvas only -- everything else lives in tokens.scss / component styles. */
+/* Global styles: page canvas, the dense type baseline, the mono utility used for
+   machine values, and the handful of ng-zorro overrides needed to keep the
+   "borders, never shadows" rule (ng-zorro ships elevation on flat controls).
+   Everything else lives in tokens.scss / component styles. */
 
 html,
 body {
@@ -7,4 +10,145 @@ body {
   background: var(--pulse-surface-page);
   color: var(--pulse-text-primary);
   font-family: var(--pulse-font-family);
+}
+
+body {
+  /* The 13px baseline goes on body, never on html: `rem` must keep resolving
+     against the browser's 16px root. The leadership pack sizes itself entirely
+     in rem and is deliberately exempt from the density pass, so shrinking the
+     root would shrink the document along with the tool. */
+  font-size: var(--pulse-text-body);
+  line-height: var(--pulse-leading-ui);
+
+  /* The shell owns all scrolling -- the content zone scrolls, the rail and top
+     bar do not. Without this the whole page scrolls and the top bar leaves. */
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* --- Machine values ---------------------------------------------------------
+   Any identifier the system generated rather than a person wrote: trip ids,
+   vendor ids, shift codes, query ids, metric ids, epoch timestamps, raw counts.
+   Global (not per-component) so every surface renders them identically. */
+.pulse-mono {
+  font-family: var(--pulse-font-mono);
+  font-size: var(--pulse-text-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* --- ng-zorro corrections ---------------------------------------------------
+   Flat controls ship with elevation and 8px+ radii. Floating layers (drawer,
+   modal, dropdown, tooltip, notification) keep their shadow -- they are the
+   only surfaces allowed one. */
+.ant-btn,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-card,
+.ant-alert,
+.ant-skeleton-content {
+  box-shadow: none !important;
+}
+
+.ant-modal-content,
+.ant-drawer-content,
+.ant-dropdown-menu,
+.ant-select-dropdown,
+.ant-tooltip-inner,
+.ant-notification-notice {
+  box-shadow: var(--pulse-shadow-overlay) !important;
+}
+
+.ant-modal-content,
+.ant-dropdown-menu,
+.ant-select-dropdown {
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-card);
+}
+
+.ant-drawer-body,
+.ant-drawer-header,
+.ant-modal-content,
+.ant-modal-body {
+  background: var(--pulse-surface-card);
+  color: var(--pulse-text-primary);
+}
+
+.ant-drawer-title,
+.ant-modal-title {
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-title);
+  font-weight: 500;
+}
+
+/* Motion budget: hover/focus only. Kill ng-zorro's longer default easings on
+   flat controls; the drawer keeps its own slide, as shipped. */
+.ant-btn,
+.ant-input,
+.ant-select-selector {
+  transition: background-color var(--pulse-motion), border-color var(--pulse-motion),
+    color var(--pulse-motion) !important;
+}
+
+*:focus-visible {
+  outline: 1px solid var(--pulse-focus-ring);
+  outline-offset: 1px;
+}
+
+/* --- Tables -----------------------------------------------------------------
+   One global definition so every table in the app is the same 32px-row,
+   hairline-separated grid. Machine columns take .pulse-mono per cell. */
+.pulse-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-card);
+  background: var(--pulse-surface-1);
+  font-size: var(--pulse-text-body);
+  table-layout: fixed;
+}
+
+.pulse-table th,
+.pulse-table td {
+  height: var(--pulse-row-height);
+  padding: 0 var(--pulse-space-3);
+  overflow: hidden;
+  border-bottom: 1px solid var(--pulse-border-subtle);
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pulse-table th {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pulse-table thead th {
+  border-bottom-color: var(--pulse-border-default);
+}
+
+.pulse-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pulse-table tbody tr {
+  transition: background-color var(--pulse-motion);
+}
+
+.pulse-table tbody tr:hover {
+  background: var(--pulse-surface-hover);
+}
+
+.pulse-table td.pulse-table__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pulse-table--clickable tbody tr {
+  cursor: pointer;
 }

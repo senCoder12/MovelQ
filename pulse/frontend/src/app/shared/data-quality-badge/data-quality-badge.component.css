@@ -1,7 +1,22 @@
 .data-quality-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--pulse-space-2);
-  font-size: 0.8125rem;
+  gap: 5px;
+  font-size: var(--pulse-text-label);
+  line-height: 1;
   color: var(--pulse-text-muted);
+  white-space: nowrap;
+}
+
+.data-quality-badge__icon {
+  font-size: 11px;
+}
+
+.data-quality-badge__pct {
+  font-family: var(--pulse-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-quality-badge__confidence {
+  color: var(--pulse-text-secondary);
 }

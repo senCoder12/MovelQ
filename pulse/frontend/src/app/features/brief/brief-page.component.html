@@ -1,43 +1,72 @@
-<div class="brief-page">
-  <header class="brief-page__header">
-    <div>
-      <h1 class="brief-page__title">Pulse brief</h1>
-      @if (insights(); as list) {
-        <p class="brief-page__subtitle">
-          Agent ran {{ generatedAt() }} &middot; scanned {{ scannedTrips() }} trips &middot;
-          {{ list.length }} of {{ list.length }} signals worth your time
-        </p>
-      } @else {
-        <p class="brief-page__subtitle">Persona-scoped feed of current insights</p>
-      }
-    </div>
-    <div class="brief-page__personas">
-      @for (option of personas; track option) {
-        <button
-          type="button"
-          class="brief-page__persona-button"
-          [class.brief-page__persona-button--active]="option === persona()"
-          (click)="selectPersona(option)"
-        >
-          {{ option }}
+<div class="brief">
+  <!-- Summary: one tile per domain, each rolling up its most severe insight. -->
+  @if (tiles().length > 0) {
+    <div class="tiles">
+      @for (tile of tiles(); track tile.insightId) {
+        <button type="button" class="tile" [class]="'tile tile--' + tile.tone" (click)="focusTile(tile.insightId)">
+          <span class="tile__head">
+            <span class="tile__label">{{ tile.label }}</span>
+            <span class="tile__badge">{{ tile.badge }}</span>
+          </span>
+          <span class="tile__value-row">
+            <span class="tile__value pulse-mono">{{ tile.value }}</span>
+            <span class="tile__value-label">{{ tile.valueLabel }}</span>
+          </span>
+          <span class="tile__blurb">{{ tile.blurb }}</span>
+          <span class="tile__footnote">
+            <span nz-icon nzType="alert" class="tile__footnote-icon"></span>
+            {{ tile.footnote }}
+          </span>
         </button>
       }
     </div>
-  </header>
+  }
 
-  <nz-skeleton [nzLoading]="loading()" [nzActive]="true" [nzParagraph]="{ rows: 6 }">
-    @if (insights() && insights()!.length === 0) {
-      <p class="brief-page__empty">No insights for this persona right now.</p>
-    }
-    <div class="brief-page__list">
-      @for (insight of insights(); track insight.insight_id) {
-        <app-insight-card
-          [insight]="insight"
-          (showMath)="openTrace($event)"
-          (actionClicked)="onActionClicked($event)"
-        />
-      }
+  <!-- Feed header and filters. -->
+  <div class="feed-head">
+    <div class="feed-head__text">
+      <h2 class="feed-head__title">Actionable discrepancies</h2>
+      <p class="feed-head__sub">Scanned anomalies requiring vendor escalation and audit recovery.</p>
     </div>
+    <div class="feed-head__controls">
+      <span class="feed-head__keys">
+        <span class="pulse-mono">j</span>/<span class="pulse-mono">k</span> move
+        <span class="pulse-mono">&crarr;</span> trace
+      </span>
+      <div class="tabs" role="group" aria-label="Filter issues">
+        @for (tab of tabs(); track tab.key) {
+          <button
+            type="button"
+            class="tabs__tab"
+            [class.tabs__tab--active]="tab.key === filter()"
+            (click)="selectFilter(tab.key)"
+          >
+            {{ tab.label }}
+            @if (tab.key === 'all') {
+              <span class="pulse-mono">({{ tab.count }})</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <nz-skeleton [nzLoading]="loading() && !insights()" [nzActive]="false" [nzParagraph]="{ rows: 10 }">
+    @if (insights()) {
+      @if (visible().length === 0) {
+        <p class="brief__empty">No insights match this filter in the current tenant.</p>
+      }
+      <div class="brief__list">
+        @for (insight of visible(); track insight.insight_id; let i = $index) {
+          <app-insight-card
+            [insight]="insight"
+            [selected]="i === cursor()"
+            (showMath)="openTrace($event)"
+            (actionClicked)="onActionClicked($event)"
+          />
+        }
+      </div>
+    }
   </nz-skeleton>
 </div>
 

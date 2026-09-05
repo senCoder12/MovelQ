@@ -1,0 +1,55 @@
+<nz-modal
+  [nzVisible]="shell.paletteOpen()"
+  [nzFooter]="null"
+  [nzClosable]="false"
+  [nzWidth]="520"
+  [nzBodyStyle]="{ padding: '0' }"
+  nzClassName="palette"
+  (nzAfterOpen)="onOpened()"
+  (nzOnCancel)="close()"
+>
+  <ng-container *nzModalContent>
+    <div class="palette__search">
+      <span nz-icon nzType="search" class="palette__search-icon"></span>
+      <input
+        #queryInput
+        type="text"
+        class="palette__input"
+        placeholder="Jump to a view, switch tenant, search insights"
+        [ngModel]="query()"
+        (ngModelChange)="onQueryChange($event)"
+        (keydown)="onKeydown($event)"
+      />
+      <span class="palette__esc pulse-mono">esc</span>
+    </div>
+
+    @if (results().length === 0) {
+      <p class="palette__empty">No match for &ldquo;{{ query() }}&rdquo;</p>
+    } @else {
+      <ul class="palette__list">
+        @for (command of results(); track command.id; let i = $index) {
+          @if (isGroupStart(i)) {
+            <li class="palette__group">{{ command.group }}</li>
+          }
+          <li>
+            <button
+              type="button"
+              class="palette__row"
+              [class.palette__row--selected]="i === selected()"
+              (mouseenter)="selected.set(i)"
+              (click)="run(i)"
+            >
+              <span class="palette__label">{{ command.label }}</span>
+              @if (command.hint) {
+                <span class="palette__hint pulse-mono">{{ command.hint }}</span>
+              }
+              @if (i === selected()) {
+                <span nz-icon nzType="enter" class="palette__enter"></span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </ng-container>
+</nz-modal>

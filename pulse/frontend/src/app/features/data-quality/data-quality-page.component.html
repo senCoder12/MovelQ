@@ -1,0 +1,175 @@
+@if (error(); as message) {
+  <p class="dq__status dq__status--error">{{ message }}</p>
+} @else if (rows().length === 0 && !loading()) {
+  <p class="dq__status">No data-quality entries in this tenant.</p>
+} @else {
+  <!-- Roll-up of the table below it: integrity of the telemetry, how much is
+       worth acting on, and the fleet both were measured over. -->
+  <section class="cards" aria-label="Data quality summary">
+    <article class="card">
+      <header class="card__head">
+        <h2 class="card__label">Overall integrity</h2>
+        <span class="pill" [class]="'pill pill--' + integrityBadge().tone">{{
+          integrityBadge().label
+        }}</span>
+      </header>
+      <p class="card__value">
+        <span class="card__number pulse-mono">{{ integrityValue() }}</span>
+        <span class="card__unit">%</span>
+      </p>
+      <p class="card__sub">Clean telemetry &amp; verified records</p>
+    </article>
+
+    <article class="card">
+      <header class="card__head">
+        <h2 class="card__label">Actionable signals</h2>
+        <span class="pill" [class]="'pill pill--' + signalBadge().tone">{{
+          signalBadge().label
+        }}</span>
+      </header>
+      <p class="card__value">
+        <span class="card__number pulse-mono">{{ signalCount() }}</span>
+        <span class="card__unit card__unit--wide">
+          {{ signalCount() === 1 ? 'Issue detected' : 'Issues detected' }}
+        </span>
+      </p>
+      <p class="card__sub">{{ priorityLine() }}</p>
+    </article>
+
+    <article class="card">
+      <header class="card__head">
+        <h2 class="card__label">Total monitored trips</h2>
+        <span class="pill pill--period">{{ periodLabel() }}</span>
+      </header>
+      <p class="card__value">
+        <span class="card__number pulse-mono">{{ count(monitoredTrips()) }}</span>
+        <span class="card__unit">trips</span>
+      </p>
+      <p class="card__sub">Continuous automated telemetry audit</p>
+    </article>
+  </section>
+
+  <div class="toolbar">
+    <label class="search">
+      <span nz-icon nzType="search" class="search__icon"></span>
+      <input
+        class="search__input"
+        type="search"
+        placeholder="Search signals..."
+        aria-label="Search signals"
+        [value]="query()"
+        (input)="setQuery($any($event.target).value)"
+      />
+    </label>
+
+    <div class="segmented" role="group" aria-label="Filter by severity">
+      <button
+        type="button"
+        class="segmented__item"
+        [class.segmented__item--active]="filter() === 'all'"
+        (click)="setFilter('all')"
+      >
+        All signals
+      </button>
+      <button
+        type="button"
+        class="segmented__item"
+        [class.segmented__item--active]="filter() === 'high'"
+        (click)="setFilter('high')"
+      >
+        <span class="dot dot--danger"></span>
+        High impact ({{ highCount() }})
+      </button>
+      <button
+        type="button"
+        class="segmented__item"
+        [class.segmented__item--active]="filter() === 'medium'"
+        (click)="setFilter('medium')"
+      >
+        <span class="dot dot--warn"></span>
+        Medium ({{ mediumCount() }})
+      </button>
+    </div>
+
+    <button type="button" class="export" (click)="export()">
+      <span nz-icon nzType="upload"></span>
+      Export
+    </button>
+  </div>
+
+  <div class="panel">
+    <table class="signals">
+      <colgroup>
+        <col />
+        <col style="width: 210px" />
+        <col style="width: 170px" />
+        <col style="width: 130px" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">Signal</th>
+          <th scope="col">Impacted volume</th>
+          <th scope="col">Severity</th>
+          <th scope="col" class="signals__action">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of pageRows(); track row.insightId) {
+          <tr>
+            <td>
+              <div class="signal">
+                <span class="signal__code pulse-mono">{{ row.code }}</span>
+                <span class="signal__text">
+                  <span class="signal__title">{{ row.title }}</span>
+                  <span class="signal__desc">{{ row.description }}</span>
+                </span>
+              </div>
+            </td>
+            <td>
+              <span class="volume pulse-mono">{{ count(row.trips) }} <span class="volume__unit">trips</span></span>
+              <span class="volume__rate" [class]="'volume__rate volume__rate--' + row.qualifierTone">{{
+                row.qualifier
+              }}</span>
+            </td>
+            <td>
+              <span class="severity" [class]="'severity severity--' + row.band">{{
+                row.severityLabel
+              }}</span>
+            </td>
+            <td class="signals__action">
+              <button type="button" class="review" (click)="review(row)">
+                Review
+                <span nz-icon nzType="right" class="review__caret"></span>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="signals__empty">No signal matches this filter.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <footer class="panel__foot">
+      <span class="panel__count">
+        Showing {{ filtered().length }}
+        {{ filtered().length === 1 ? 'data signal' : 'data signals' }}
+      </span>
+      <div class="pager">
+        <button type="button" class="pager__step" [disabled]="page() <= 1" (click)="previous()">
+          Previous
+        </button>
+        <span class="pager__position pulse-mono">Page {{ page() }} of {{ pageCount() }}</span>
+        <button
+          type="button"
+          class="pager__step"
+          [disabled]="page() >= pageCount()"
+          (click)="next()"
+        >
+          Next
+        </button>
+      </div>
+    </footer>
+  </div>
+}

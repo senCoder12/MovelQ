@@ -1,156 +1,293 @@
-.insight-card {
+/* Two columns: the argument on the left, the escalation number and its action
+   on the right, split by an inset hairline. The card's tone (danger/warn/ok)
+   drives the domain tag and the severity line -- one severity read, two places.
+   The CTA stays accent-coloured in every tone: it is the same action whatever
+   the score, and a red button reads as "destructive", not "urgent". */
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-card);
+  background: var(--pulse-surface-card);
+  transition: border-color var(--pulse-motion);
+}
+
+.card:hover {
+  border-color: var(--pulse-border-strong);
+}
+
+.card--selected,
+.card--selected:hover {
+  border-color: var(--pulse-primary);
+}
+
+.card__main {
   display: flex;
   flex-direction: column;
   gap: var(--pulse-space-4);
+  min-width: 0;
   padding: var(--pulse-space-5);
-  border: 1px solid var(--pulse-border-default);
-  border-radius: var(--pulse-radius-lg);
-  background: var(--pulse-surface-card);
-  box-shadow: var(--pulse-shadow-sm);
 }
 
-.insight-card__header {
+/* --- Eyebrow --- */
+
+.card__eyebrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--pulse-space-3);
+  gap: var(--pulse-space-2);
 }
 
-.insight-card__entity {
+.card__tag {
+  padding: 3px var(--pulse-space-2);
+  border: 1px solid currentcolor;
+  border-radius: var(--pulse-radius-control);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card__severity {
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+}
+
+.card--danger .card__tag,
+.card--danger .card__severity {
+  color: var(--pulse-danger-text);
+}
+
+.card--warn .card__tag,
+.card--warn .card__severity {
+  color: var(--pulse-warn-text);
+}
+
+.card--ok .card__tag,
+.card--ok .card__severity {
+  color: var(--pulse-ok-text);
+}
+
+.card__dot,
+.card__window {
+  color: var(--pulse-text-muted);
+}
+
+/* --- Lede --- */
+
+.card__lede {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  gap: 6px;
   min-width: 0;
 }
 
-.insight-card__entity-name {
-  font-weight: 600;
-  color: var(--pulse-text-primary);
-}
-
-.insight-card__entity-meta {
-  font-size: 0.75rem;
-  color: var(--pulse-text-muted);
-}
-
-.insight-card__trace-button {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  gap: var(--pulse-space-1);
-  padding: var(--pulse-space-1) var(--pulse-space-3);
-  border: 1px solid var(--pulse-border-default);
-  border-radius: var(--pulse-radius-md);
-  background: var(--pulse-surface-card);
-  color: var(--pulse-text-secondary);
-  font-size: 0.8125rem;
-  cursor: pointer;
-}
-
-.insight-card__trace-button:hover {
-  background: var(--pulse-surface-hover);
-  color: var(--pulse-text-primary);
-}
-
-.insight-card__headline {
+.card__headline {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
   color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-lead);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
-.insight-card__body {
+.card__sub {
   margin: 0;
   color: var(--pulse-text-secondary);
-  line-height: 1.5;
+  font-size: var(--pulse-text-body);
+  line-height: 1.45;
 }
 
-.insight-card__section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--pulse-space-2);
-  padding-top: var(--pulse-space-4);
-  border-top: 1px solid var(--pulse-border-subtle);
-}
+/* --- Fact boxes --- */
 
-.insight-card__section-title {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--pulse-text-muted);
-}
-
-.insight-card__coincident-events {
-  margin: 0;
-  padding-left: var(--pulse-space-5);
-  color: var(--pulse-text-secondary);
-  font-size: 0.8125rem;
-}
-
-.insight-card__actions {
-  display: flex;
-  flex-direction: column;
+.card__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: var(--pulse-space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.insight-card__action {
+.fact {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  padding: var(--pulse-space-3) var(--pulse-space-3) 14px;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-panel);
+}
+
+.fact__label {
+  margin: 0;
+  overflow: hidden;
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fact__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-headline);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.fact__seg {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Machine values inside a fact box track the box's size, not the global 12px
+   mono step -- a vendor id must not read smaller than the count beside it. */
+.fact__seg.pulse-mono {
+  font-size: inherit;
+}
+
+.fact__seg--danger {
+  color: var(--pulse-danger-text);
+}
+
+.fact__seg--warn {
+  color: var(--pulse-warn-text);
+}
+
+.fact__seg--ok {
+  color: var(--pulse-ok-text);
+}
+
+.fact__seg--accent {
+  color: var(--pulse-cat-2);
+}
+
+.fact__seg--muted {
+  color: var(--pulse-text-muted);
+  font-weight: 400;
+}
+
+/* --- Right rail --- */
+
+.card__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: var(--pulse-space-1);
-  width: 100%;
-  padding: var(--pulse-space-3);
+  padding: var(--pulse-space-5);
+}
+
+/* Inset hairline rather than a border on the rail: the divider marks where the
+   argument ends, and should not run into the card's rounded corners. */
+.card__rail::before {
+  content: '';
+  position: absolute;
+  top: var(--pulse-space-5);
+  bottom: var(--pulse-space-5);
+  left: 0;
+  width: 1px;
+  background: var(--pulse-border-default);
+}
+
+.card__stat-label {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+  text-align: right;
+}
+
+.card__stat-value {
+  overflow: hidden;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-metric);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+.card__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pulse-space-2);
+  margin-top: var(--pulse-space-4);
+  padding: 11px var(--pulse-space-3);
   border: none;
   border-radius: var(--pulse-radius-md);
-  background: var(--pulse-surface-raised);
-  text-align: left;
-  cursor: pointer;
+  background: var(--pulse-primary);
+  color: var(--pulse-primary-fg);
   font: inherit;
-}
-
-.insight-card__action:hover {
-  background: var(--pulse-surface-hover);
-}
-
-.insight-card__action-heading {
-  display: flex;
-  align-items: baseline;
-  gap: var(--pulse-space-2);
-}
-
-.insight-card__action-type {
-  padding: 0.0625rem var(--pulse-space-2);
-  border-radius: var(--pulse-radius-sm);
-  background: var(--pulse-surface-hover);
-  color: var(--pulse-text-muted);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.insight-card__action-title {
+  font-size: var(--pulse-text-title);
   font-weight: 600;
+  cursor: pointer;
+  transition: filter var(--pulse-motion);
+}
+
+.card__cta:hover {
+  filter: brightness(1.08);
+}
+
+.card__cta-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card__cta-arrow {
+  flex: none;
+  font-size: 11px;
+}
+
+.card__secondary {
+  margin-top: var(--pulse-space-3);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--pulse-text-muted);
+  font: inherit;
+  font-size: var(--pulse-text-mono);
+  cursor: pointer;
+  transition: color var(--pulse-motion);
+}
+
+.card__secondary:hover {
   color: var(--pulse-text-primary);
 }
 
-.insight-card__action-draft {
-  margin: 0;
-  color: var(--pulse-text-secondary);
-  font-size: 0.875rem;
-  font-style: italic;
-}
+@media (max-width: 900px) {
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-.insight-card__action-rationale {
-  margin: 0;
-  color: var(--pulse-text-muted);
-  font-size: 0.8125rem;
-}
+  .card__rail {
+    justify-content: flex-start;
+    padding-top: 0;
+  }
 
-.insight-card__footer {
-  padding-top: var(--pulse-space-3);
-  border-top: 1px solid var(--pulse-border-subtle);
+  .card__rail::before {
+    top: 0;
+    right: var(--pulse-space-5);
+    bottom: auto;
+    left: var(--pulse-space-5);
+    width: auto;
+    height: 1px;
+  }
+
+  .card__stat-label,
+  .card__stat-value {
+    text-align: left;
+  }
 }

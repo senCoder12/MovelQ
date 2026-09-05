@@ -22,6 +22,7 @@ INSIGHTS: dict[str, dict] = {
             {"type": "peer", "label": "next-worst shift-suffix contradiction rate", "value": 38.2, "unit": "percent"},
             {"type": "computed", "label": "mean reported delay_minutes", "value": 1.38, "unit": "minutes"},
             {"type": "computed", "label": "mean computed_arrival_delay_min", "value": 9.87, "unit": "minutes"},
+            {"type": "computed", "label": "share of all trips in ':16' shift codes", "value": 14.15, "unit": "percent"},
         ],
         "attribution": [
             {"dim": "shift_suffix", "value": ":16", "contribution_pct": 58.4, "n": 29854},
@@ -89,7 +90,7 @@ INSIGHTS: dict[str, dict] = {
         "entity": {"dim": "contract_type", "id": "EV", "name": "EV Contract"},
         "references": [{"type": "computed", "label": "expected fuel_type for EV contract", "value": "electric", "unit": "text"}],
         "attribution": [], "controls": [], "coincident_events": [],
-        "impact": {"affected_trips": 2056},
+        "impact": {"affected_trips": 2056, "cost_inr_month": 2870000.0},
         "data_quality": {"excluded_pct": 0.0, "confidence": "medium"},
         "trace": [{"query_id": "ev_contract_fuel_mismatch", "params": {"contract_type": "EV"},
                    "numerator": 2056, "denominator": 25351, "exclusions": [],
@@ -106,6 +107,62 @@ INSIGHTS: dict[str, dict] = {
         },
     },
 }
+
+
+# Hardcoded response for POST /internal/leadership-narrative, keyed to the
+# three insights above. Request body is accepted but ignored -- Angular and
+# Java build against a fixed narrative while the real LLM path (agent/app/api
+# /leadership.py) lands.
+LEADERSHIP_NARRATIVE = {
+    "headline": "Reported delay data is unreliable across half the fleet",
+    "summary": (
+        "July's 215,885 trips surface three reconciliation gaps worth board attention. "
+        "Delay data is reliable for only 45.5% of trips, concentrated in a narrow set of "
+        "shift codes. Night escort coverage for female employees has reached 60.8%, well "
+        "above the fleet baseline but still incomplete. EV-contract fuel matched actual "
+        "fuel type on 91.9% of trips, with the remainder representing a distinct billing "
+        "exposure."
+    ),
+    "findings": [
+        {
+            "insight_id": "ins_001",
+            "body": (
+                "117,605 trips arrived late while reporting zero delay, 54.5% of the fleet. "
+                "The ':16' shift-code cluster accounts for 14.15% of trips but 58.4% of the "
+                "contradiction, against 38.2% for the next-worst cluster, and the gap "
+                "survives both hour-of-day and vendor controls. One hypothesis, not yet "
+                "confirmed, is that the scheduling path for ':16' codes never writes the "
+                "delay field."
+            ),
+            "recommendation": "Audit the scheduling path for ':16' shift codes to confirm whether it writes the delay field.",
+        },
+        {
+            "insight_id": "ins_002",
+            "body": (
+                "Night escort coverage for female employees stands at 60.8%, leaving "
+                "31,838 of 81,174 legs uncovered. That is roughly double the 20.2% "
+                "baseline escort rate across all legs, so targeting is working, but "
+                "coverage has plateaued short of full coverage. Sneha Mikhailov Travel "
+                "and Meera Pavlov Travel account for the bulk of the uncovered legs."
+            ),
+            "recommendation": "Close the coverage gap at Sneha Mikhailov Travel and Meera Pavlov Travel, the two lowest-covering vendors.",
+        },
+        {
+            "insight_id": "ins_003",
+            "body": (
+                "2,056 trips billed under EV contract terms ran on petrol or diesel, "
+                "8.11% of EV-contract rows and ₹2.87M in billing. This affects both cost "
+                "recovery and sustainability reporting."
+            ),
+            "recommendation": "Reconcile contract type against actual fuel type at the billing stage.",
+        },
+    ],
+}
+
+
+@app.post("/internal/leadership-narrative")
+def leadership_narrative(payload: dict) -> dict:
+    return LEADERSHIP_NARRATIVE
 
 
 @app.get("/health")

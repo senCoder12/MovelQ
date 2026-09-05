@@ -1,15 +1,11 @@
 import { Component } from '@angular/core';
 
-import { BriefPageComponent } from './features/brief/brief-page.component';
-import { HealthPageComponent } from './features/health/health-page.component';
+import { AppShellComponent } from './shell/app-shell.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [HealthPageComponent, BriefPageComponent],
-  template: `
-    <app-health-page />
-    <app-brief-page />
-  `,
+  imports: [AppShellComponent],
+  template: `<app-shell />`,
 })
 export class AppComponent {}

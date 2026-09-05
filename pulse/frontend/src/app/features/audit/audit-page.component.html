@@ -1,0 +1,44 @@
+@if (error(); as message) {
+  <p class="status status--error">{{ message }}</p>
+} @else if (rows().length === 0 && !loading()) {
+  <p class="status">No query trace recorded for this tenant.</p>
+} @else {
+  <table class="pulse-table">
+    <colgroup>
+      <col style="width: 190px" />
+      <col style="width: 110px" />
+      <col style="width: 210px" />
+      <col style="width: 96px" />
+      <col style="width: 96px" />
+      <col style="width: 74px" />
+      <col />
+    </colgroup>
+    <thead>
+      <tr>
+        <th scope="col">Query</th>
+        <th scope="col">Insight</th>
+        <th scope="col">Metric</th>
+        <th scope="col">Numerator</th>
+        <th scope="col">Denominator</th>
+        <th scope="col">Ratio</th>
+        <th scope="col">Validation</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.insightId + row.queryId) {
+        <tr [title]="row.exclusions.length > 0 ? row.exclusions.join('; ') : row.notes">
+          <td class="pulse-mono">{{ row.queryId }}</td>
+          <td class="pulse-mono">{{ row.insightId }}</td>
+          <td class="pulse-mono">{{ row.metricId }}</td>
+          <td class="pulse-mono pulse-table__num">{{ count(row.numerator) }}</td>
+          <td class="pulse-mono pulse-table__num">{{ count(row.denominator) }}</td>
+          <td class="pulse-mono pulse-table__num">{{ pct(row.ratio) }}</td>
+          <td>
+            <span class="verdict" [class]="'verdict verdict--' + row.status">{{ row.status }}</span>
+            <span class="notes">{{ row.notes }}</span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

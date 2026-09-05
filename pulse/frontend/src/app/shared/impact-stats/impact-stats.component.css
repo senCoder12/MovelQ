@@ -1,0 +1,34 @@
+/* Inline row, not a grid. Stats separate with a middot drawn by the pseudo
+   element so no separator markup ends up in the template. */
+
+.impact-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--pulse-space-1) var(--pulse-space-2);
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-body);
+}
+
+.impact-stats__stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.impact-stats__stat + .impact-stats__stat::before {
+  content: '\00B7';
+  margin-right: var(--pulse-space-1);
+  color: var(--pulse-text-muted);
+}
+
+.impact-stats__value {
+  color: var(--pulse-text-primary);
+  font-weight: 600;
+}
+
+.impact-stats__label {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+}

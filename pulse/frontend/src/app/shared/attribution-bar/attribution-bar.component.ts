@@ -12,9 +12,15 @@ interface AttributionSegment extends Attribution {
   color: string;
 }
 
-/** Horizontal stacked bar of attribution contributions, plus a value/pct/n legend. Top 3
- * contributors get a named segment; everything past that collapses into one "everything
- * else" segment/legend row alongside the true unattributed remainder. */
+/** Horizontal stacked bar of attribution contributions, plus a single-line
+ * value/pct/n legend. Top 3 contributors get a named segment; everything past
+ * that collapses into one "everything else" segment/legend item alongside the
+ * true unattributed remainder.
+ *
+ * Attribution values are machine values (shift codes, vendor ids) and render
+ * monospace. Projected content lands at the end of the legend row -- the insight
+ * card puts its control chips there so controls read as part of the same line
+ * rather than as their own block. */
 @Component({
   selector: 'app-attribution-bar',
   standalone: true,
@@ -31,22 +37,24 @@ interface AttributionSegment extends Attribution {
         <span class="attribution-bar__segment attribution-bar__segment--filler" [style.width.%]="fillerPct()"></span>
       }
     </div>
-    <ul class="attribution-legend">
+    <div class="attribution-legend">
       @for (segment of segments(); track segment.dim + segment.value) {
-        <li class="attribution-legend__item">
+        <span class="attribution-legend__item">
           <span class="attribution-legend__swatch" [style.background]="segment.color"></span>
-          <span class="attribution-legend__text">
-            '{{ segment.value }}' {{ segment.contribution_pct }}% (n={{ formattedN(segment.n) }})
-          </span>
-        </li>
+          <span class="attribution-legend__value">{{ segment.value }}</span>
+          <span class="attribution-legend__stat">{{ segment.contribution_pct }}%</span>
+          <span class="attribution-legend__stat">n={{ formattedN(segment.n) }}</span>
+        </span>
       }
       @if (fillerPct() > 0) {
-        <li class="attribution-legend__item">
+        <span class="attribution-legend__item">
           <span class="attribution-legend__swatch attribution-legend__swatch--filler"></span>
-          <span class="attribution-legend__text">everything else &middot; {{ fillerPct() }}%</span>
-        </li>
+          <span class="attribution-legend__rest">everything else</span>
+          <span class="attribution-legend__stat">{{ fillerPct() }}%</span>
+        </span>
       }
-    </ul>
+      <ng-content />
+    </div>
   `,
   styleUrl: './attribution-bar.component.css',
 })
@@ -75,7 +83,10 @@ export class AttributionBarComponent {
     })),
   );
 
-  readonly fillerPct = computed(() => Math.max(0, 100 - this.namedTotalPct() * this.scale()));
+  /** Rounded to 1dp: the raw subtraction carries float noise straight into the legend. */
+  readonly fillerPct = computed(() =>
+    Math.round(Math.max(0, 100 - this.namedTotalPct() * this.scale()) * 10) / 10,
+  );
 
   formattedN(n: number): string {
     return N_FORMAT.format(n);

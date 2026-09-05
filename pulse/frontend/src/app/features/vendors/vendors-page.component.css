@@ -1,0 +1,9 @@
+.status {
+  margin: 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+.status--error {
+  color: var(--pulse-danger-text);
+}

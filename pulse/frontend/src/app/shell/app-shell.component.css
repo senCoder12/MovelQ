@@ -1,0 +1,346 @@
+/* Three zones, one scroll container. The rail and top bar are flex siblings of
+   the content, so the bar is sticky by construction and never scrolls away. */
+
+.shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* --- Zone 1: rail ---------------------------------------------------------- */
+
+.rail {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--pulse-rail-width);
+  padding: var(--pulse-space-3);
+  overflow-y: auto;
+  border-right: 1px solid var(--pulse-border-default);
+  background: var(--pulse-surface-rail);
+}
+
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  padding: var(--pulse-space-2) var(--pulse-space-2) var(--pulse-space-4);
+}
+
+.lockup__mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--pulse-radius-panel);
+  background: var(--pulse-primary);
+  color: var(--pulse-primary-fg);
+  font-size: var(--pulse-text-headline);
+  font-weight: 700;
+}
+
+.lockup__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lockup__name {
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-body);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.lockup__sub {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+}
+
+.lockup__version {
+  flex: none;
+  padding: 2px 5px;
+  border-radius: var(--pulse-radius-sm);
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+  font-size: 10px;
+}
+
+.rail__section {
+  margin: var(--pulse-space-4) 0 var(--pulse-space-2);
+  padding: 0 var(--pulse-space-2);
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rail__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rail__item {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-3);
+  height: 38px;
+  padding: 0 var(--pulse-space-3);
+  border-radius: var(--pulse-radius-panel);
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-title);
+  text-decoration: none;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion);
+}
+
+.rail__item:hover {
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+.rail__item--active {
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+  font-weight: 500;
+}
+
+.rail__icon {
+  flex: none;
+  font-size: 15px;
+}
+
+.rail__label {
+  overflow: hidden;
+  flex: 1 1 auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail__badge {
+  flex: none;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: var(--pulse-radius-pill);
+  background: var(--pulse-danger-soft);
+  color: var(--pulse-danger-text);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.rail__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.rail__dot--ok {
+  background: var(--pulse-ok);
+}
+
+.rail__dot--warn {
+  background: var(--pulse-warn);
+}
+
+.rail__dot--danger {
+  background: var(--pulse-danger);
+}
+
+/* --- Tenant, pinned bottom --- */
+
+.rail__foot {
+  margin-top: auto;
+  padding-top: var(--pulse-space-3);
+}
+
+.tenant {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  width: 100%;
+  padding: var(--pulse-space-2);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-panel);
+  background: var(--pulse-surface-panel);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), border-color var(--pulse-motion);
+}
+
+.tenant:hover {
+  border-color: var(--pulse-border-strong);
+  background: var(--pulse-surface-hover);
+}
+
+.tenant__mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--pulse-radius-control);
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tenant__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tenant__name {
+  overflow: hidden;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-body);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.tenant__env {
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+}
+
+.tenant__caret {
+  flex: none;
+  color: var(--pulse-text-muted);
+  font-size: 10px;
+}
+
+/* --- Zone 2: top bar ------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-4);
+  height: var(--pulse-topbar-height);
+  padding: 0 var(--pulse-space-5);
+  border-bottom: 1px solid var(--pulse-border-default);
+  background: var(--pulse-surface-rail);
+}
+
+.topbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-3);
+  min-width: 0;
+}
+
+.topbar__view {
+  margin: 0;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-headline);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.issue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--pulse-space-3);
+  border-radius: var(--pulse-radius-pill);
+  background: var(--pulse-danger-soft);
+  color: var(--pulse-danger-text);
+  font-size: var(--pulse-text-label);
+  white-space: nowrap;
+}
+
+.issue__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+.topbar__right {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--pulse-space-2);
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-control);
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-secondary);
+  font: inherit;
+  font-size: var(--pulse-text-body);
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion),
+    border-color var(--pulse-motion);
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--pulse-border-strong);
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+.control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control--icon {
+  padding: 0 var(--pulse-space-2);
+}
+
+.control--hint {
+  font-size: var(--pulse-text-label);
+}
+
+.control__caret {
+  font-size: 10px;
+  color: var(--pulse-text-muted);
+}
+
+/* --- Zone 3: content ------------------------------------------------------- */
+
+.content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.content__inner {
+  /* Left-aligned against the rail, not centred: a centred column reads as a
+     marketing page, a left-aligned one reads as a tool. */
+  max-width: var(--pulse-content-max);
+  padding: var(--pulse-space-5);
+}

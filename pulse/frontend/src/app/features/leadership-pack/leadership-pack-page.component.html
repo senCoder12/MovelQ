@@ -1,0 +1,67 @@
+<div class="leadership-page">
+  <div class="leadership-page__chrome">
+    <span class="leadership-page__timestamp">
+      @if (generatedAt(); as ts) {
+        Generated {{ ts | date: 'd MMM y, HH:mm' }}
+      } @else {
+        Generating&hellip;
+      }
+    </span>
+    <div class="leadership-page__actions">
+      <button type="button" class="leadership-page__chrome-button" [disabled]="!pack()" (click)="copyAsText()">
+        <span nz-icon nzType="copy"></span>
+        Copy
+      </button>
+      <button type="button" class="leadership-page__chrome-button" [disabled]="!pack()" (click)="send()">
+        <span nz-icon nzType="send"></span>
+        Send
+      </button>
+    </div>
+  </div>
+
+  @if (pack(); as p) {
+    <article class="leadership-doc">
+      <p class="leadership-doc__eyebrow">{{ eyebrow() }}</p>
+      <h1 class="leadership-doc__headline">{{ p.headline }}</h1>
+      <p class="leadership-doc__summary">{{ p.summary }}</p>
+
+      <div class="leadership-doc__tiles">
+        @for (tile of p.tiles; track tile.label) {
+          <div class="leadership-doc__tile">
+            <span class="leadership-doc__tile-label">{{ tile.label }}</span>
+            <span class="leadership-doc__tile-value">{{ tile.value }}</span>
+            <span class="leadership-doc__tile-reference" [class]="'leadership-doc__tile-reference--' + tile.direction">
+              {{ tile.reference }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <h2 class="leadership-doc__section-label">What needs a decision</h2>
+      <div class="leadership-doc__findings">
+        @for (finding of p.findings; track finding.insight_id) {
+          <div
+            class="leadership-doc__finding"
+            [class]="'leadership-doc__finding--' + severityBand(finding.severity)"
+          >
+            <h3 class="leadership-doc__finding-title">{{ finding.title }}</h3>
+            <p class="leadership-doc__finding-body">{{ finding.body }}</p>
+            <p class="leadership-doc__finding-recommendation"><strong>Recommendation:</strong> {{ finding.recommendation }}</p>
+          </div>
+        }
+      </div>
+
+      <footer class="leadership-doc__footer">
+        Computed from {{ p.footer.computed_from_trips | number }} trips &middot;
+        {{ p.footer.excluded_trips | number }} excluded ({{ p.footer.excluded_pct }}%)
+        @if (p.footer.exclusion_reasons.length > 0) {
+          &middot; {{ p.footer.exclusion_reasons.join('; ') }}
+        }
+      </footer>
+    </article>
+  } @else if (error()) {
+    <p class="leadership-page__status leadership-page__status--error">{{ error() }}</p>
+  } @else {
+    <p class="leadership-page__status">Loading leadership pack&hellip;</p>
+  }
+</div>

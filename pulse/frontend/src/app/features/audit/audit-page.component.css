@@ -1,0 +1,42 @@
+.status {
+  margin: 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+.status--error {
+  color: var(--pulse-danger-text);
+}
+
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  margin-right: var(--pulse-space-2);
+  padding: 0 6px;
+  border-radius: var(--pulse-radius-sm);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.verdict--pass {
+  background: var(--pulse-ok-soft);
+  color: var(--pulse-ok-text);
+}
+
+.verdict--warn {
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+}
+
+.verdict--fail {
+  background: var(--pulse-danger-soft);
+  color: var(--pulse-danger-text);
+}
+
+.notes {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+}

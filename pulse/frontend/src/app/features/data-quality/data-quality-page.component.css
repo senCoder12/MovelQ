@@ -1,0 +1,470 @@
+/* Three roll-up cards, one filter bar, one panel holding the signal table and
+   its footer. Everything reads from tokens -- no raw colours, no shadows. */
+
+.dq__status {
+  margin: 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+.dq__status--error {
+  color: var(--pulse-danger-text);
+}
+
+/* --- Summary cards --------------------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--pulse-card-gap);
+  margin-bottom: var(--pulse-space-5);
+}
+
+.card {
+  padding: var(--pulse-space-4) var(--pulse-space-5);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-card);
+  background: var(--pulse-surface-card);
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+}
+
+.card__label {
+  margin: 0;
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.card__value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pulse-space-2);
+  margin: var(--pulse-space-3) 0 var(--pulse-space-1);
+}
+
+.card__number {
+  color: var(--pulse-text-primary);
+  /* The one number on the page that is read from across a room, so it sits a
+     step above the metric size the cards elsewhere use. */
+  font-size: calc(var(--pulse-text-metric) * 1.25);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.card__unit {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+/* The count card's unit is a phrase, not a symbol, so it carries prose weight. */
+.card__unit--wide {
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-headline);
+  font-weight: 500;
+}
+
+.card__sub {
+  margin: 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-mono);
+}
+
+/* --- Status pills ---------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 var(--pulse-space-2);
+  border-radius: var(--pulse-radius-pill);
+  font-size: var(--pulse-text-label);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill--ok {
+  background: var(--pulse-ok-soft);
+  color: var(--pulse-ok-text);
+}
+
+.pill--warn {
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+}
+
+.pill--danger {
+  background: var(--pulse-danger-soft);
+  color: var(--pulse-danger-text);
+}
+
+.pill--period {
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+}
+
+/* --- Toolbar --------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pulse-space-3);
+  margin-bottom: var(--pulse-space-4);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  width: 300px;
+  height: 34px;
+  padding: 0 var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-card);
+  transition: border-color var(--pulse-motion);
+}
+
+.search:focus-within {
+  border-color: var(--pulse-border-strong);
+}
+
+.search__icon {
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-mono);
+}
+
+.search__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--pulse-text-primary);
+  font-family: inherit;
+  font-size: var(--pulse-text-body);
+  outline: none;
+}
+
+.search__input::placeholder {
+  color: var(--pulse-text-muted);
+}
+
+/* Chrome's native clear affordance on type=search fights the flat control. */
+.search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-panel);
+}
+
+.segmented__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  height: 26px;
+  padding: 0 var(--pulse-space-3);
+  border: none;
+  border-radius: var(--pulse-radius-control);
+  background: none;
+  color: var(--pulse-text-secondary);
+  font-family: inherit;
+  font-size: var(--pulse-text-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion);
+}
+
+.segmented__item:hover {
+  color: var(--pulse-text-primary);
+}
+
+.segmented__item--active {
+  background: var(--pulse-surface-card);
+  color: var(--pulse-text-primary);
+  font-weight: 500;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--pulse-radius-pill);
+}
+
+.dot--danger {
+  background: var(--pulse-danger);
+}
+
+.dot--warn {
+  background: var(--pulse-warn);
+}
+
+.export {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  height: 34px;
+  margin-left: auto;
+  padding: 0 var(--pulse-space-4);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-card);
+  color: var(--pulse-text-secondary);
+  font-family: inherit;
+  font-size: var(--pulse-text-body);
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion),
+    border-color var(--pulse-motion);
+}
+
+.export:hover {
+  border-color: var(--pulse-border-strong);
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+/* --- Signal table ---------------------------------------------------------- */
+
+.panel {
+  overflow: hidden;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-card);
+  background: var(--pulse-surface-card);
+}
+
+.signals {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--pulse-text-body);
+  table-layout: fixed;
+}
+
+.signals th {
+  height: 38px;
+  padding: 0 var(--pulse-space-5);
+  border-bottom: 1px solid var(--pulse-border-default);
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+  font-weight: 500;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Rows carry two lines of content, so they are taller than the app's 32px
+   scanning grid -- this is a review queue, not a readout. */
+.signals td {
+  padding: var(--pulse-space-4) var(--pulse-space-5);
+  border-bottom: 1px solid var(--pulse-border-subtle);
+  vertical-align: middle;
+}
+
+.signals tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.signals tbody tr {
+  transition: background-color var(--pulse-motion);
+}
+
+.signals tbody tr:hover {
+  background: var(--pulse-surface-hover);
+}
+
+.signals__action {
+  text-align: right;
+}
+
+.signals__empty {
+  color: var(--pulse-text-muted);
+  text-align: center;
+}
+
+.signal {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-3);
+  min-width: 0;
+}
+
+.signal__code {
+  flex: none;
+  padding: 3px var(--pulse-space-2);
+  border-radius: var(--pulse-radius-control);
+  background: var(--pulse-primary-soft);
+  color: var(--pulse-primary-text);
+  font-weight: 600;
+}
+
+.signal__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.signal__title {
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-title);
+  font-weight: 600;
+}
+
+.signal__desc {
+  overflow: hidden;
+  color: var(--pulse-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.volume {
+  display: block;
+  color: var(--pulse-text-primary);
+  font-size: var(--pulse-text-body);
+  font-weight: 600;
+}
+
+.volume__unit {
+  color: var(--pulse-text-muted);
+  font-weight: 400;
+}
+
+.volume__rate {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--pulse-text-mono);
+}
+
+.volume__rate--danger {
+  color: var(--pulse-danger-text);
+}
+
+.volume__rate--warn {
+  color: var(--pulse-warn-text);
+}
+
+.volume__rate--ok {
+  color: var(--pulse-ok-text);
+}
+
+.volume__rate--muted {
+  color: var(--pulse-text-muted);
+}
+
+.severity {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--pulse-space-3);
+  border-radius: var(--pulse-radius-pill);
+  font-size: var(--pulse-text-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.severity--high {
+  background: var(--pulse-severity-high-bg);
+  color: var(--pulse-severity-high-fg);
+}
+
+.severity--medium {
+  background: var(--pulse-severity-medium-bg);
+  color: var(--pulse-severity-medium-fg);
+}
+
+.severity--low {
+  background: var(--pulse-severity-low-bg);
+  color: var(--pulse-severity-low-fg);
+}
+
+.review {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  height: 30px;
+  padding: 0 var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-card);
+  color: var(--pulse-text-secondary);
+  font-family: inherit;
+  font-size: var(--pulse-text-body);
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion),
+    border-color var(--pulse-motion);
+}
+
+.review:hover {
+  border-color: var(--pulse-border-strong);
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+.review__caret {
+  font-size: var(--pulse-text-label);
+  color: var(--pulse-text-muted);
+}
+
+/* --- Panel footer ---------------------------------------------------------- */
+
+.panel__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+  padding: var(--pulse-space-3) var(--pulse-space-5);
+  border-top: 1px solid var(--pulse-border-default);
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-mono);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+}
+
+.pager__step {
+  height: 26px;
+  padding: 0 var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-control);
+  background: none;
+  color: var(--pulse-text-secondary);
+  font-family: inherit;
+  font-size: var(--pulse-text-mono);
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion),
+    border-color var(--pulse-motion);
+}
+
+.pager__step:hover:not(:disabled) {
+  border-color: var(--pulse-border-strong);
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+.pager__step:disabled {
+  border-color: var(--pulse-border-subtle);
+  color: var(--pulse-text-muted);
+  cursor: default;
+  opacity: 0.6;
+}
+
+.pager__position {
+  color: var(--pulse-text-secondary);
+}

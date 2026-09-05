@@ -1,9 +1,9 @@
 .attribution-bar {
   display: flex;
   width: 100%;
-  height: 0.625rem;
-  border-radius: var(--pulse-radius-sm);
+  height: 4px;
   overflow: hidden;
+  border-radius: 2px;
   background: var(--pulse-surface-hover);
 }
 
@@ -15,30 +15,52 @@
   background: var(--pulse-cat-other);
 }
 
+/* One line: legend items first, then whatever the caller projects (the insight
+   card projects its control chips here). Wraps only when the row runs out. */
 .attribution-legend {
   display: flex;
-  flex-direction: column;
-  gap: var(--pulse-space-1);
-  margin: var(--pulse-space-2) 0 0;
-  padding: 0;
-  list-style: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pulse-space-1) var(--pulse-space-3);
+  margin-top: 6px;
+  font-size: var(--pulse-text-label);
+  line-height: 1;
+  color: var(--pulse-text-secondary);
 }
 
 .attribution-legend__item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--pulse-space-2);
-  font-size: 0.8125rem;
-  color: var(--pulse-text-secondary);
+  gap: 5px;
+  white-space: nowrap;
 }
 
 .attribution-legend__swatch {
   flex: none;
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: var(--pulse-radius-sm);
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
 }
 
 .attribution-legend__swatch--filler {
   background: var(--pulse-cat-other);
+}
+
+/* Machine value (shift code, vendor id): monospace, at the legend's 11px. */
+.attribution-legend__value {
+  overflow: hidden;
+  max-width: 24ch;
+  color: var(--pulse-text-primary);
+  font-family: var(--pulse-font-mono);
+  text-overflow: ellipsis;
+}
+
+.attribution-legend__rest {
+  color: var(--pulse-text-muted);
+}
+
+.attribution-legend__stat {
+  color: var(--pulse-text-muted);
+  font-family: var(--pulse-font-mono);
+  font-variant-numeric: tabular-nums;
 }

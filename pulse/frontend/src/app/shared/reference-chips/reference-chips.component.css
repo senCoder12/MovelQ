@@ -1,7 +1,10 @@
+/* Hairline outline, no fill -- the reference type is carried by the colour of
+   its own label, not by a background or a thick rule. */
+
 .reference-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--pulse-space-2);
+  gap: var(--pulse-space-1) var(--pulse-space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -9,49 +12,55 @@
 
 .reference-chip {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--pulse-space-2);
-  padding: var(--pulse-space-1) var(--pulse-space-3);
+  align-items: center;
+  gap: 5px;
+  height: 18px;
+  padding: 0 6px;
   border: 1px solid var(--pulse-border-default);
-  border-left-width: 3px;
-  border-radius: var(--pulse-radius-md);
-  background: var(--pulse-surface-card);
-  font-size: 0.8125rem;
-}
-
-.reference-chip--historical {
-  border-left-color: var(--pulse-cat-1);
-}
-
-.reference-chip--sla {
-  border-left-color: var(--pulse-cat-2);
-}
-
-.reference-chip--peer {
-  border-left-color: var(--pulse-cat-3);
-}
-
-.reference-chip--industry {
-  border-left-color: var(--pulse-cat-4);
-}
-
-.reference-chip--computed {
-  border-left-color: var(--pulse-cat-5);
+  border-radius: var(--pulse-radius-control);
+  background: none;
+  font-size: var(--pulse-text-label);
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .reference-chip__type {
-  color: var(--pulse-text-muted);
   text-transform: uppercase;
-  font-size: 0.6875rem;
   letter-spacing: 0.04em;
 }
 
+.reference-chip--historical .reference-chip__type {
+  color: var(--pulse-cat-1);
+}
+
+.reference-chip--sla .reference-chip__type {
+  color: var(--pulse-cat-2);
+}
+
+.reference-chip--peer .reference-chip__type {
+  color: var(--pulse-cat-3);
+}
+
+.reference-chip--industry .reference-chip__type {
+  color: var(--pulse-cat-4);
+}
+
+.reference-chip--computed .reference-chip__type {
+  color: var(--pulse-cat-5);
+}
+
 .reference-chip__label {
+  overflow: hidden;
+  max-width: 16ch;
   color: var(--pulse-text-secondary);
+  text-overflow: ellipsis;
 }
 
 .reference-chip__value {
   color: var(--pulse-text-primary);
-  font-weight: 600;
+  /* Machine value: monospace family, but at the chip's 11px rather than the
+     12px of the global .pulse-mono utility, so the chip keeps one type size. */
+  font-family: var(--pulse-font-mono);
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }

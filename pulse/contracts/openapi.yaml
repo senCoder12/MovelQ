@@ -11,6 +11,15 @@ servers:
 
 components:
   parameters:
+    periodParam:
+      name: period
+      in: query
+      required: false
+      description: Month the pack covers, "yyyy-MM". Defaults to 2026-07 (no period picker yet).
+      schema:
+        type: string
+        pattern: '^\d{4}-\d{2}$'
+        default: '2026-07'
     tenantHeader:
       name: X-Tenant-Id
       in: header
@@ -85,6 +94,78 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DataQualityEntry'
+
+    LeadershipPack:
+      type: object
+      additionalProperties: false
+      required: [period, scope, headline, summary, tiles, findings, footer]
+      properties:
+        period:
+          type: string
+          description: Display form, e.g. "July 2026".
+        scope:
+          type: object
+          additionalProperties: false
+          required: [tenant, sites, trip_count, date_range]
+          properties:
+            tenant:
+              type: string
+              nullable: true
+            sites:
+              type: array
+              items: {type: string}
+            trip_count:
+              type: integer
+            date_range:
+              type: object
+              additionalProperties: false
+              required: [from, to]
+              properties:
+                from: {type: string, format: date}
+                to: {type: string, format: date}
+        headline:
+          type: string
+          maxLength: 100
+        summary:
+          type: string
+        tiles:
+          type: array
+          maxItems: 4
+          items:
+            type: object
+            additionalProperties: false
+            required: [label, value, reference, direction]
+            properties:
+              label: {type: string}
+              value:
+                type: string
+                description: Pre-formatted for direct display, e.g. "215,885" or "45.5%".
+              reference: {type: string}
+              direction: {type: string, enum: [good, bad, neutral]}
+        findings:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            additionalProperties: false
+            required: [title, severity, body, recommendation, insight_id]
+            properties:
+              title: {type: string}
+              severity: {type: integer, minimum: 0, maximum: 100}
+              body: {type: string}
+              recommendation: {type: string}
+              insight_id: {type: string}
+        footer:
+          type: object
+          additionalProperties: false
+          required: [computed_from_trips, excluded_trips, excluded_pct, exclusion_reasons]
+          properties:
+            computed_from_trips: {type: integer}
+            excluded_trips: {type: integer}
+            excluded_pct: {type: number}
+            exclusion_reasons:
+              type: array
+              items: {type: string}
 
     Error:
       type: object
@@ -167,3 +248,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DataQualityResponse'
+
+  /reports/leadership:
+    get:
+      operationId: getLeadershipPack
+      summary: One-click monthly report for a transport & facilities head to forward to leadership.
+      parameters:
+        - $ref: '#/components/parameters/periodParam'
+        - $ref: '#/components/parameters/tenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadershipPack'

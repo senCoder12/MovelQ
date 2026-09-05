@@ -1,38 +1,196 @@
 // Pulse design tokens.
 //
-// Plain CSS custom properties on :root -- deliberately NOT SCSS variables,
-// since components are plain .css/.scss files reading var(--pulse-*) and
-// this file must be the single place raw color/spacing values are allowed
-// to appear. No component may declare a raw hex/rgb value anywhere.
+// Plain CSS custom properties -- deliberately NOT SCSS variables, since
+// components are plain .css files reading var(--pulse-*) and this file must be
+// the single place raw color values are allowed to appear. No component may
+// declare a raw hex/rgb value anywhere.
 //
-// Loaded first in angular.json's styles array (before ng-zorro theme.less
-// and styles.scss) so every token is available to everything downstream.
+// Loaded first in angular.json's styles array (before ng-zorro theme.less and
+// styles.scss) so every token is available to everything downstream.
+//
+// --- Theming ---------------------------------------------------------------
+// Three states, resolved in this order:
+//   1. :root                                 -> light palette (the base)
+//   2. @media (prefers-color-scheme: dark)   -> dark, unless the user has
+//      :root:not([data-theme='light'])          explicitly chosen light
+//   3. :root[data-theme='dark']              -> dark, chosen explicitly
+// ThemeService stamps data-theme on <html>; absent = follow the system.
+// The dark values live in one mixin so the two dark selectors cannot drift.
 
-:root {
+// ---------------------------------------------------------------------------
+// Dark palette
+// ---------------------------------------------------------------------------
+@mixin pulse-dark {
   // --- Surfaces ---
-  --pulse-surface-page: #f5f6fa;
-  --pulse-surface-card: #ffffff;
-  --pulse-surface-raised: #fafafc;
-  --pulse-surface-hover: #eef0f6;
+  --pulse-surface-page: #0e0e13;
+  --pulse-surface-rail: #121218;
+  --pulse-surface-card: #16161d;
+  --pulse-surface-panel: #1c1c24;
+  --pulse-surface-raised: #16161d;
+  --pulse-surface-hover: #22222b;
 
   // --- Text ---
-  --pulse-text-primary: #1a1d29;
-  --pulse-text-secondary: #4b4f5e;
-  --pulse-text-muted: #8a8e9c;
+  --pulse-text-primary: #f4f4f6;
+  --pulse-text-secondary: #a8a8b3;
+  --pulse-text-muted: #6e6e7d;
 
   // --- Borders ---
-  --pulse-border-default: #dcdfe6;
-  --pulse-border-subtle: #ecedf2;
+  --pulse-border-default: #26262f;
+  --pulse-border-subtle: #1e1e26;
+  --pulse-border-strong: #33333f;
+
+  // --- Accent (indigo) ---
+  --pulse-primary: #6366f1;
+  --pulse-primary-fg: #ffffff;
+  --pulse-primary-soft: rgba(99, 102, 241, 0.14);
+  --pulse-primary-text: #a5a8fb;
+
+  // --- Status ramp: danger / warning / success ---
+  --pulse-danger: #e5484d;
+  --pulse-danger-soft: rgba(229, 72, 77, 0.14);
+  --pulse-danger-text: #ff6369;
+  --pulse-warn: #f5a524;
+  --pulse-warn-soft: rgba(245, 165, 36, 0.14);
+  --pulse-warn-text: #ffb224;
+  --pulse-ok: #30a46c;
+  --pulse-ok-soft: rgba(48, 164, 108, 0.14);
+  --pulse-ok-text: #3dd68c;
+
+  // --- Categorical (attribution segments) ---
+  --pulse-cat-1: #818cf8;
+  --pulse-cat-2: #2dd4bf;
+  --pulse-cat-3: #fbbf24;
+  --pulse-cat-4: #f472b6;
+  --pulse-cat-5: #94a3b8;
+  --pulse-cat-other: #33333f;
+
+  // --- Shadow (floating layers only) ---
+  --pulse-shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+// ---------------------------------------------------------------------------
+// Light palette (the base)
+// ---------------------------------------------------------------------------
+:root {
+  // --- Surfaces ---
+  --pulse-surface-page: #f6f7f9;
+  --pulse-surface-rail: #ffffff;
+  --pulse-surface-card: #ffffff;
+  --pulse-surface-panel: #f7f8fa;
+  --pulse-surface-raised: #ffffff;
+  --pulse-surface-hover: #eef0f4;
+
+  // --- Text ---
+  --pulse-text-primary: #15161a;
+  --pulse-text-secondary: #52545e;
+  --pulse-text-muted: #85889a;
+
+  // --- Borders ---
+  --pulse-border-default: #e2e4ea;
+  --pulse-border-subtle: #eef0f4;
+  --pulse-border-strong: #cfd2db;
+
+  // --- Accent (indigo) ---
+  --pulse-primary: #4f46e5;
+  --pulse-primary-fg: #ffffff;
+  --pulse-primary-soft: rgba(79, 70, 229, 0.09);
+  --pulse-primary-text: #4338ca;
+
+  // --- Status ramp ---
+  --pulse-danger: #dc2626;
+  --pulse-danger-soft: rgba(220, 38, 38, 0.09);
+  --pulse-danger-text: #b91c1c;
+  --pulse-warn: #d97706;
+  --pulse-warn-soft: rgba(217, 119, 6, 0.11);
+  --pulse-warn-text: #b45309;
+  --pulse-ok: #16a34a;
+  --pulse-ok-soft: rgba(22, 163, 74, 0.1);
+  --pulse-ok-text: #15803d;
+
+  // --- Categorical ---
+  --pulse-cat-1: #4f46e5;
+  --pulse-cat-2: #0d9488;
+  --pulse-cat-3: #d97706;
+  --pulse-cat-4: #db2777;
+  --pulse-cat-5: #64748b;
+  --pulse-cat-other: #d8dbe3;
+
+  // --- Shadow (floating layers ONLY: drawer, modal, dropdown, tooltip) ---
+  --pulse-shadow-overlay: 0 16px 40px rgba(20, 22, 30, 0.14);
+
+  color-scheme: light;
+
+  // --- Nested surfaces (a surface elevated off the page, and a second level
+  // nested inside it -- the leadership pack's document sheet (surface-2) and
+  // the tiles sitting inside it (surface-1)) ---
+  --pulse-surface-1: var(--pulse-surface-card);
+  --pulse-surface-2: var(--pulse-surface-card);
+
+  // --- Severity ramp (severity: int 0-100; low <50, medium 50-79, high 80+).
+  // Aliased onto the status ramp so a theme swap moves them together. ---
+  --pulse-severity-low-bg: var(--pulse-ok-soft);
+  --pulse-severity-low-fg: var(--pulse-ok-text);
+  --pulse-severity-medium-bg: var(--pulse-warn-soft);
+  --pulse-severity-medium-fg: var(--pulse-warn-text);
+  --pulse-severity-high-bg: var(--pulse-danger-soft);
+  --pulse-severity-high-fg: var(--pulse-danger-text);
+
+  // --- Data-quality confidence. Kept distinct from severity: confidence
+  // "high" is good (green), the opposite polarity of severity "high" (bad),
+  // so the two must never share a variable. ---
+  --pulse-confidence-high-bg: var(--pulse-ok-soft);
+  --pulse-confidence-high-fg: var(--pulse-ok-text);
+  --pulse-confidence-medium-bg: var(--pulse-warn-soft);
+  --pulse-confidence-medium-fg: var(--pulse-warn-text);
+  --pulse-confidence-low-bg: var(--pulse-danger-soft);
+  --pulse-confidence-low-fg: var(--pulse-danger-text);
+
+  // --- Direction (a tile's reference line: good/bad/neutral relative to where
+  // the number should be, independent of severity/confidence) ---
+  --pulse-direction-good-fg: var(--pulse-ok-text);
+  --pulse-direction-bad-fg: var(--pulse-danger-text);
+  --pulse-direction-neutral-fg: var(--pulse-text-muted);
+
+  // --- Keyboard selection (j/k roving focus in the brief feed) ---
+  --pulse-focus-ring: var(--pulse-primary);
+
+  // --- Typography (mirrored in theme.less @font-family -- Less can't read a
+  // CSS custom property inside ng-zorro's mixins, so keep these in sync) ---
+  --pulse-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  // Monospace: machine values only (trip/vendor/query/metric ids, shift codes,
+  // epoch timestamps, raw counts). Never prose.
+  --pulse-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+
+  // Serif voice for document-shaped surfaces (the leadership pack). Everything
+  // else stays on --pulse-font-family.
+  --pulse-font-voice: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+
+  // --- Type scale ---
+  --pulse-text-label: 11px;
+  --pulse-text-mono: 12px;
+  --pulse-text-body: 13px;
+  --pulse-text-title: 14px;
+  --pulse-text-headline: 15px;
+  --pulse-text-lead: 20px;
+  --pulse-text-metric: 30px;
+
+  // --- Line heights: 1.5 for UI text, 1.7 reserved for the leadership pack ---
+  --pulse-leading-ui: 1.5;
+  --pulse-leading-doc: 1.7;
 
   // --- Radius ---
+  --pulse-radius-control: 6px;
+  --pulse-radius-panel: 10px;
+  --pulse-radius-card: 14px;
+  --pulse-radius-pill: 999px;
   --pulse-radius-sm: 4px;
   --pulse-radius-md: 8px;
   --pulse-radius-lg: 14px;
-
-  // --- Typography (mirrored in theme.less @font-family -- Less can't read a CSS custom
-  // property inside ng-zorro's mixins, so keep this string in sync by hand) ---
-  --pulse-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
 
   // --- Spacing scale ---
   --pulse-space-1: 4px;
@@ -42,90 +200,27 @@
   --pulse-space-5: 24px;
   --pulse-space-6: 32px;
 
-  // --- Shadows (raised surfaces) ---
-  --pulse-shadow-sm: 0 1px 2px rgba(20, 22, 30, 0.06);
-  --pulse-shadow-md: 0 4px 12px rgba(20, 22, 30, 0.1);
+  // --- Motion budget: hover/focus transitions only ---
+  --pulse-motion: 120ms ease-out;
 
-  // --- Severity ramp (severity: int 0-100) ---
-  // low <50, medium 50-79, high 80-100
-  --pulse-severity-low-bg: #e3f6ed;
-  --pulse-severity-low-fg: #106b45;
-  --pulse-severity-medium-bg: #fff2d9;
-  --pulse-severity-medium-fg: #8a5a00;
-  --pulse-severity-high-bg: #fce3e1;
-  --pulse-severity-high-fg: #b3261e;
-
-  // --- Data-quality confidence (high/medium/low) ---
-  // Kept distinct from the severity ramp: confidence "high" is good (green),
-  // the opposite polarity of severity "high" (bad/red), so the two must
-  // never share a variable.
-  --pulse-confidence-high-bg: #e3f6ed;
-  --pulse-confidence-high-fg: #106b45;
-  --pulse-confidence-medium-bg: #fff2d9;
-  --pulse-confidence-medium-fg: #8a5a00;
-  --pulse-confidence-low-bg: #fce3e1;
-  --pulse-confidence-low-fg: #b3261e;
-
-  // --- Small categorical set (attribution-bar segments) ---
-  --pulse-cat-1: #4f46e5;
-  --pulse-cat-2: #0ea5a4;
-  --pulse-cat-3: #f59e0b;
-  --pulse-cat-4: #ec4899;
-  --pulse-cat-5: #64748b;
-  --pulse-cat-other: #cbd5e1;
-
-  // --- Brand / primary (mirrored in theme.less @primary-color) ---
-  --pulse-primary: #4f46e5;
-  --pulse-primary-fg: #ffffff;
+  // --- Shell geometry ---
+  --pulse-rail-width: 264px;
+  --pulse-rail-collapsed: 56px;
+  --pulse-rail-expanded: 264px;
+  --pulse-topbar-height: 60px;
+  --pulse-content-max: 1180px;
+  --pulse-row-height: 32px;
+  --pulse-card-gap: 16px;
 }
 
+// System dark, unless the user explicitly picked light.
 @media (prefers-color-scheme: dark) {
-  :root {
-    // --- Surfaces ---
-    --pulse-surface-page: #14161c;
-    --pulse-surface-card: #1c1f27;
-    --pulse-surface-raised: #232733;
-    --pulse-surface-hover: #2a2f3b;
-
-    // --- Text ---
-    --pulse-text-primary: #f0f1f5;
-    --pulse-text-secondary: #c3c6d0;
-    --pulse-text-muted: #9599a6;
-
-    // --- Borders ---
-    --pulse-border-default: #333846;
-    --pulse-border-subtle: #262a34;
-
-    // --- Shadows ---
-    --pulse-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --pulse-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
-
-    // --- Severity ramp ---
-    --pulse-severity-low-bg: #123526;
-    --pulse-severity-low-fg: #4ade80;
-    --pulse-severity-medium-bg: #3d2e0a;
-    --pulse-severity-medium-fg: #fbbf24;
-    --pulse-severity-high-bg: #3b1615;
-    --pulse-severity-high-fg: #f87171;
-
-    // --- Data-quality confidence ---
-    --pulse-confidence-high-bg: #123526;
-    --pulse-confidence-high-fg: #4ade80;
-    --pulse-confidence-medium-bg: #3d2e0a;
-    --pulse-confidence-medium-fg: #fbbf24;
-    --pulse-confidence-low-bg: #3b1615;
-    --pulse-confidence-low-fg: #f87171;
-
-    // --- Small categorical set ---
-    --pulse-cat-1: #818cf8;
-    --pulse-cat-2: #2dd4bf;
-    --pulse-cat-3: #fbbf24;
-    --pulse-cat-4: #f472b6;
-    --pulse-cat-5: #94a3b8;
-    --pulse-cat-other: #3f4657;
-
-    // --- Brand / primary ---
-    --pulse-primary: #818cf8;
-    --pulse-primary-fg: #14161c;
+  :root:not([data-theme='light']) {
+    @include pulse-dark;
   }
+}
+
+// Explicitly chosen dark, regardless of system.
+:root[data-theme='dark'] {
+  @include pulse-dark;
 }

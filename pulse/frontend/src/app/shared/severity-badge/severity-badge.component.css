@@ -2,12 +2,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.25rem;
-  padding: var(--pulse-space-1) var(--pulse-space-2);
-  border-radius: var(--pulse-radius-lg);
+  min-width: 22px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--pulse-radius-control);
+  font-family: var(--pulse-font-mono);
+  font-size: var(--pulse-text-label);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .severity-badge--low {

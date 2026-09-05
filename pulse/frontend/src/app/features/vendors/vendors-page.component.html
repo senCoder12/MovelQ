@@ -1,0 +1,32 @@
+@if (error(); as message) {
+  <p class="status status--error">{{ message }}</p>
+} @else if (rows().length === 0 && !loading()) {
+  <p class="status">No vendor is implicated by any current finding in this tenant.</p>
+} @else {
+  <table class="pulse-table pulse-table--clickable">
+    <colgroup>
+      <col />
+      <col style="width: 120px" />
+      <col style="width: 120px" />
+      <col style="width: 110px" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th scope="col">Vendor</th>
+        <th scope="col">Worst share</th>
+        <th scope="col">Trips</th>
+        <th scope="col">Findings</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.vendorId) {
+        <tr (click)="open(row)" [title]="row.topHeadline">
+          <td class="pulse-mono">{{ row.vendorId }}</td>
+          <td class="pulse-mono pulse-table__num">{{ pct(row.worstPct) }}</td>
+          <td class="pulse-mono pulse-table__num">{{ count(row.trips) }}</td>
+          <td class="pulse-mono pulse-table__num">{{ row.findings }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

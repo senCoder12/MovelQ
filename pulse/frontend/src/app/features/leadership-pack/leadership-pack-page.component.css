@@ -1,0 +1,207 @@
+/* Chrome (timestamp, copy/send) lives outside the document surface and stays
+   sans-serif/muted throughout -- everything printable lives in .leadership-doc. */
+
+.leadership-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-4);
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: var(--pulse-space-5);
+}
+
+.leadership-page__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-3);
+  font-size: 0.8125rem;
+  color: var(--pulse-text-muted);
+}
+
+.leadership-page__actions {
+  display: flex;
+  gap: var(--pulse-space-2);
+}
+
+.leadership-page__chrome-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pulse-space-1);
+  padding: var(--pulse-space-1) var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-card);
+  color: var(--pulse-text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.leadership-page__chrome-button:hover:not(:disabled) {
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+.leadership-page__chrome-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leadership-page__status {
+  color: var(--pulse-text-muted);
+  font-size: 0.875rem;
+}
+
+.leadership-page__status--error {
+  color: var(--pulse-severity-high-fg);
+}
+
+/* --- The document itself: everything below reads like it was printed. --- */
+
+.leadership-doc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-5);
+  padding: var(--pulse-space-6);
+  border-radius: 12px;
+  background: var(--pulse-surface-2);
+}
+
+.leadership-doc__eyebrow {
+  margin: 0;
+  font-family: var(--pulse-font-family);
+  font-size: 0.6875rem;
+  color: var(--pulse-text-muted);
+}
+
+.leadership-doc__headline {
+  margin: 0;
+  font-family: var(--pulse-font-voice);
+  font-size: 1.1875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--pulse-text-primary);
+}
+
+.leadership-doc__summary {
+  margin: 0;
+  font-family: var(--pulse-font-voice);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--pulse-text-primary);
+}
+
+.leadership-doc__tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--pulse-space-3);
+}
+
+.leadership-doc__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-1);
+  padding: var(--pulse-space-4);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-1);
+}
+
+.leadership-doc__tile-label {
+  font-family: var(--pulse-font-family);
+  font-size: 0.6875rem;
+  color: var(--pulse-text-muted);
+}
+
+.leadership-doc__tile-value {
+  font-family: var(--pulse-font-family);
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--pulse-text-primary);
+}
+
+.leadership-doc__tile-reference {
+  font-family: var(--pulse-font-family);
+  font-size: 0.6875rem;
+}
+
+.leadership-doc__tile-reference--good {
+  color: var(--pulse-direction-good-fg);
+}
+
+.leadership-doc__tile-reference--bad {
+  color: var(--pulse-direction-bad-fg);
+}
+
+.leadership-doc__tile-reference--neutral {
+  color: var(--pulse-direction-neutral-fg);
+}
+
+.leadership-doc__section-label {
+  margin: 0;
+  font-family: var(--pulse-font-family);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pulse-text-primary);
+}
+
+.leadership-doc__findings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-4);
+  margin-top: calc(-1 * var(--pulse-space-2));
+}
+
+.leadership-doc__finding {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-1);
+  padding: var(--pulse-space-1) var(--pulse-space-4);
+  border-left: 2px solid;
+  border-radius: 0;
+}
+
+.leadership-doc__finding--low {
+  border-left-color: var(--pulse-severity-low-fg);
+}
+
+.leadership-doc__finding--medium {
+  border-left-color: var(--pulse-severity-medium-fg);
+}
+
+.leadership-doc__finding--high {
+  border-left-color: var(--pulse-severity-high-fg);
+}
+
+.leadership-doc__finding-title {
+  margin: 0;
+  font-family: var(--pulse-font-voice);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--pulse-text-primary);
+}
+
+.leadership-doc__finding-body {
+  margin: 0;
+  font-family: var(--pulse-font-voice);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--pulse-text-secondary);
+}
+
+.leadership-doc__finding-recommendation {
+  margin: 0;
+  font-family: var(--pulse-font-voice);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--pulse-text-primary);
+}
+
+.leadership-doc__footer {
+  margin-top: var(--pulse-space-2);
+  padding-top: var(--pulse-space-3);
+  border-top: 1px solid var(--pulse-border-subtle);
+  font-family: var(--pulse-font-family);
+  font-size: 0.6875rem;
+  color: var(--pulse-text-muted);
+}

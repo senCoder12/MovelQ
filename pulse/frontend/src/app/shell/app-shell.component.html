@@ -1,0 +1,142 @@
+<div class="shell">
+  <!-- Zone 1: rail. Product lockup, grouped nav, tenant pinned at the bottom. -->
+  <nav class="rail" aria-label="Views">
+    <div class="lockup">
+      <span class="lockup__mark">P</span>
+      <span class="lockup__text">
+        <span class="lockup__name">PULSE AI</span>
+        <span class="lockup__sub">Fleet ops intelligence</span>
+      </span>
+      <span class="lockup__version pulse-mono">v{{ shell.version }}</span>
+    </div>
+
+    @for (group of navGroups; track group.section) {
+      @if (group.section) {
+        <p class="rail__section">{{ group.section }}</p>
+      }
+      <ul class="rail__nav">
+        @for (item of group.items; track item.path) {
+          <li>
+            <a class="rail__item" [routerLink]="item.path" routerLinkActive="rail__item--active">
+              <span nz-icon [nzType]="item.icon" class="rail__icon"></span>
+              <span class="rail__label">{{ item.label }}</span>
+              @if (item.path === '/brief' && signalCount() > 0) {
+                <span class="rail__badge pulse-mono">{{ signalCount() }}</span>
+              }
+              @if (item.path === '/data-quality') {
+                <span class="rail__dot" [class]="'rail__dot--' + healthTone()"></span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- Tenant switcher. Pinned bottom: what is in scope is never off screen. -->
+    <div class="rail__foot">
+      <button
+        type="button"
+        class="tenant"
+        nz-dropdown
+        nzTrigger="click"
+        nzPlacement="topLeft"
+        [nzDropdownMenu]="tenantMenu"
+      >
+        <span class="tenant__mark pulse-mono">{{ tenants.tenantId().slice(0, 2) }}</span>
+        <span class="tenant__text">
+          <span class="tenant__name">{{ tenants.tenantId() }} enterprise</span>
+          <span class="tenant__env pulse-mono">fleet-apac-prod</span>
+        </span>
+        <span nz-icon nzType="down" class="tenant__caret"></span>
+      </button>
+      <nz-dropdown-menu #tenantMenu="nzDropdownMenu">
+        <ul nz-menu>
+          @for (tenant of tenants.tenants; track tenant) {
+            <li nz-menu-item [nzSelected]="tenant === tenants.tenantId()" (click)="selectTenant(tenant)">
+              <span class="pulse-mono">{{ tenant }}</span>
+            </li>
+          }
+        </ul>
+      </nz-dropdown-menu>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- Zone 2: top bar. Sticky by construction -- a flex sibling of the
+         scroll container, not a child of it. -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <h1 class="topbar__view">{{ shell.viewTitle() }}</h1>
+        @if (shell.agentError(); as error) {
+          <span class="issue issue--error">
+            <span class="issue__dot"></span>
+            Agent unreachable &middot; {{ error }}
+          </span>
+        } @else {
+          @if (issueLine(); as line) {
+            <span class="issue">
+              <span class="issue__dot"></span>
+              {{ line }}
+            </span>
+          }
+        }
+      </div>
+
+      <div class="topbar__right">
+        <button
+          type="button"
+          class="control control--icon"
+          [title]="'Theme: ' + theme.mode()"
+          (click)="theme.toggle()"
+        >
+          <span nz-icon [nzType]="theme.resolved() === 'dark' ? 'bulb' : 'eye'"></span>
+        </button>
+
+        <button type="button" class="control control--hint" (click)="shell.openPalette()" title="Command palette">
+          <span class="pulse-mono">&#8984;K</span>
+        </button>
+
+        <button
+          type="button"
+          class="control"
+          nz-dropdown
+          nzTrigger="click"
+          nzPlacement="bottomRight"
+          [nzDropdownMenu]="periodMenu"
+        >
+          <span nz-icon nzType="calendar"></span>
+          {{ periodLabel() }}
+          <span nz-icon nzType="down" class="control__caret"></span>
+        </button>
+        <nz-dropdown-menu #periodMenu="nzDropdownMenu">
+          <ul nz-menu>
+            @for (period of shell.periods; track period) {
+              <li nz-menu-item [nzSelected]="period === shell.period()" (click)="selectPeriod(period)">
+                {{ periodLabelFor(period) }}
+              </li>
+            }
+          </ul>
+        </nz-dropdown-menu>
+
+        <button
+          type="button"
+          class="control control--icon"
+          [disabled]="shell.loading()"
+          (click)="refresh()"
+          title="Refresh"
+        >
+          <span nz-icon nzType="reload"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Zone 3: content. The only scroll container. -->
+    <main class="content">
+      <div class="content__inner">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>
+
+<app-command-palette />

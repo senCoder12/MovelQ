@@ -1,22 +1,24 @@
+/* Projected into the attribution legend row by the insight card, so the host and
+   the list dissolve and each chip becomes a direct item of that row. */
+
+:host,
 .control-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--pulse-space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  display: contents;
 }
 
 .control-chip {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--pulse-space-1);
-  padding: var(--pulse-space-1) var(--pulse-space-3);
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
   border: 1px solid var(--pulse-border-default);
-  border-radius: var(--pulse-radius-md);
-  background: var(--pulse-surface-card);
-  font-size: 0.8125rem;
+  border-radius: var(--pulse-radius-control);
+  background: none;
+  font-size: var(--pulse-text-label);
+  line-height: 1;
   color: var(--pulse-text-secondary);
+  white-space: nowrap;
 }
 
 .control-chip--fails {
@@ -25,6 +27,7 @@
 }
 
 .control-chip__icon {
+  font-size: 10px;
   color: var(--pulse-severity-low-fg);
 }
 
@@ -38,6 +41,7 @@
 
 .control-chip__name {
   color: var(--pulse-text-primary);
+  font-family: var(--pulse-font-mono);
 }
 
 .control-chip--fails .control-chip__name {
@@ -45,8 +49,9 @@
 }
 
 .control-chip__gap {
-  font-variant-numeric: tabular-nums;
   color: var(--pulse-text-muted);
+  font-family: var(--pulse-font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .control-chip--fails .control-chip__gap {

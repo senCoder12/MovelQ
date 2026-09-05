@@ -1,0 +1,104 @@
+/* The modal is a floating layer, so it is one of the few surfaces allowed a
+   shadow (applied globally in styles.scss). Everything inside it separates
+   with hairlines like the rest of the app. */
+
+.palette__search {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  height: 40px;
+  padding: 0 var(--pulse-space-3);
+  border-bottom: 1px solid var(--pulse-border-default);
+}
+
+.palette__search-icon {
+  flex: none;
+  color: var(--pulse-text-muted);
+}
+
+.palette__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--pulse-text-primary);
+  font: inherit;
+  font-size: var(--pulse-text-body);
+  outline: none;
+}
+
+.palette__input::placeholder {
+  color: var(--pulse-text-muted);
+}
+
+.palette__esc {
+  flex: none;
+  padding: 1px var(--pulse-space-1);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-control);
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+}
+
+.palette__list {
+  max-height: 320px;
+  margin: 0;
+  padding: var(--pulse-space-1) 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.palette__group {
+  padding: var(--pulse-space-2) var(--pulse-space-3) var(--pulse-space-1);
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.palette__row {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-3);
+  width: 100%;
+  height: var(--pulse-row-height);
+  padding: 0 var(--pulse-space-3);
+  border: none;
+  background: none;
+  color: var(--pulse-text-secondary);
+  font: inherit;
+  font-size: var(--pulse-text-body);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--pulse-motion), color var(--pulse-motion);
+}
+
+.palette__row--selected {
+  background: var(--pulse-surface-hover);
+  color: var(--pulse-text-primary);
+}
+
+.palette__label {
+  overflow: hidden;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.palette__hint {
+  flex: none;
+  color: var(--pulse-text-muted);
+}
+
+.palette__enter {
+  flex: none;
+  font-size: 11px;
+  color: var(--pulse-text-muted);
+}
+
+.palette__empty {
+  margin: 0;
+  padding: var(--pulse-space-4) var(--pulse-space-3);
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}

@@ -8,9 +8,11 @@
 // properties, so these four values are copied from tokens.scss by hand --
 // keep them in sync when tokens.scss changes:
 //   @primary-color      <- --pulse-primary (light)
-//   @border-radius-base <- --pulse-radius-md
+//   @border-radius-base <- --pulse-radius-control
 //   @border-color-base  <- --pulse-border-default (light)
 //   @font-family         <- --pulse-font-family
+//   @font-size-base     <- --pulse-text-body
+//   @code-family        <- --pulse-font-mono
 //
 // Primary color: deep indigo (#4f46e5), matching --pulse-primary /
 // --pulse-cat-1 in tokens.scss. Chosen to be visually distinct from both
@@ -20,6 +22,8 @@
 @import '../../node_modules/ng-zorro-antd/ng-zorro-antd.less';
 
 @primary-color: #4f46e5;
-@border-radius-base: 8px;
+@border-radius-base: 4px;
 @border-color-base: #dcdfe6;
 @font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+@font-size-base: 13px;
+@code-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;

@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 
 import com.moveinsync.pulse.agent.dto.InsightPacket;
 import com.moveinsync.pulse.agent.dto.TraceResponse;
+import com.moveinsync.pulse.report.LeadershipNarrativeRequest;
+import com.moveinsync.pulse.report.LeadershipNarrativeResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +16,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-/** HTTP client for the agent's insight endpoints, typed against contracts/insight.schema.json.
- * Every call gets one retry before the failure is surfaced to the caller. */
+/** HTTP client for the agent's insight endpoints, typed against contracts/insight.schema.json
+ * (plus the leadership-narrative endpoint, which isn't part of that schema but is served by
+ * the same agent process). Every call gets one retry before the failure is surfaced to the caller. */
 @Component
 public class InsightAgentClient {
 
@@ -48,6 +51,14 @@ public class InsightAgentClient {
         } catch (HttpClientErrorException.NotFound ex) {
             return Optional.empty();
         }
+    }
+
+    public LeadershipNarrativeResponse getLeadershipNarrative(LeadershipNarrativeRequest request) {
+        return withRetry(() -> restClient.post()
+                .uri("/internal/leadership-narrative")
+                .body(request)
+                .retrieve()
+                .body(LeadershipNarrativeResponse.class));
     }
 
     /** Retries a call exactly once on any non-404 RestClientException (timeout, connection

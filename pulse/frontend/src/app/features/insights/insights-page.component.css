@@ -1,0 +1,13 @@
+.insights__status {
+  margin: 0;
+  color: var(--pulse-text-muted);
+  font-size: var(--pulse-text-body);
+}
+
+.insights__status--error {
+  color: var(--pulse-severity-high-fg);
+}
+
+.insights__headline {
+  color: var(--pulse-text-primary);
+}

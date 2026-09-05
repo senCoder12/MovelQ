@@ -12,6 +12,7 @@ dependencies = [
     "pyyaml",
     "pydantic",
     "python-dotenv",
+    "anthropic",
 ]
 
 [project.optional-dependencies]

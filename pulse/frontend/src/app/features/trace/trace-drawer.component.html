@@ -1,14 +1,18 @@
-<nz-drawer [nzVisible]="visible()" nzTitle="Query trace" nzWidth="480" (nzOnClose)="close()">
+<nz-drawer [nzVisible]="visible()" nzTitle="Query trace" [nzWidth]="480" (nzOnClose)="close()">
   <ng-container *nzDrawerContent>
     @if (insight(); as insight) {
       <dl class="trace-meta">
         <div class="trace-meta__row">
+          <dt>Insight</dt>
+          <dd class="pulse-mono">{{ insight.insight_id }}</dd>
+        </div>
+        <div class="trace-meta__row">
           <dt>Metric</dt>
-          <dd>{{ insight.metric.id }}</dd>
+          <dd class="pulse-mono">{{ insight.metric.id }}</dd>
         </div>
         <div class="trace-meta__row">
           <dt>Window</dt>
-          <dd>{{ insight.metric.window }}</dd>
+          <dd class="pulse-mono">{{ insight.metric.window }}</dd>
         </div>
       </dl>
 
@@ -21,7 +25,7 @@
           @for (entry of entries(); track entry.query_id) {
             <li class="trace-entry">
               <div class="trace-entry__header">
-                <span class="trace-entry__query-id">{{ entry.query_id }}</span>
+                <span class="trace-entry__query-id pulse-mono">{{ entry.query_id }}</span>
                 <span
                   class="trace-entry__validation"
                   [class]="'trace-entry__validation--' + entry.validation.status"
@@ -31,11 +35,11 @@
               </div>
 
               <div class="trace-entry__counts">
-                <span>numerator {{ entry.numerator }}</span>
-                <span>denominator {{ entry.denominator }}</span>
+                <span>numerator <span class="pulse-mono">{{ entry.numerator }}</span></span>
+                <span>denominator <span class="pulse-mono">{{ entry.denominator }}</span></span>
               </div>
 
-              <p class="trace-entry__params"><code>{{ formatParams(entry.params) }}</code></p>
+              <p class="trace-entry__params pulse-mono">{{ formatParams(entry.params) }}</p>
 
               @if (entry.exclusions.length > 0) {
                 <ul class="trace-entry__exclusions">
