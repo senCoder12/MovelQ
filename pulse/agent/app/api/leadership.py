@@ -29,6 +29,7 @@ from app.agent import validator
 from app.agent.json_llm import parse_json_object
 from app.config import get_settings
 from app.llm import client as llm_client
+from app.llm import ledger
 
 router = APIRouter(prefix="/internal", tags=["internal"])
 
@@ -53,7 +54,11 @@ def _call_llm(payload: dict[str, Any], feedback: str | None = None) -> dict[str,
     if feedback:
         prompt += f"\n\n## Correction required\n\n{feedback}"
     try:
-        raw = llm_client.complete(system="Respond with strict JSON only, no markdown fences.", prompt=prompt)
+        raw = llm_client.complete(
+            system="Respond with strict JSON only, no markdown fences.",
+            prompt=prompt,
+            call_type="leadership_narrative",
+        )
     except Exception:
         # Any LLM-call failure (missing key, network, rate limit) degrades to
         # the template fallback rather than a 500 -- see module docstring.
@@ -92,6 +97,11 @@ def _fallback(payload: dict[str, Any]) -> dict[str, Any]:
 def leadership_narrative(payload: dict[str, Any]) -> dict[str, Any]:
     key = _cache_key(payload)
     if key in _CACHE:
+        # A hit is still a call this endpoint served, and the cache hit rate in
+        # GET /api/metrics/cost is computed from ledger rows -- so a hit that
+        # wrote no row would make the cache look like it was never used. No
+        # tokens and no provider latency, because nothing left the process.
+        ledger.record_cache_hit("leadership_narrative", get_settings().llm_model)
         return _CACHE[key]
 
     parsed = _call_llm(payload)

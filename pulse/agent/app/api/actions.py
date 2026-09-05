@@ -20,6 +20,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from app.actions import drafters
+from app.llm import context
 
 router = APIRouter(prefix="/internal", tags=["internal"])
 
@@ -33,7 +34,10 @@ def draft_action(payload: dict[str, Any]) -> dict[str, Any]:
     if not action_type:
         raise HTTPException(status_code=400, detail="payload.type is required")
 
-    try:
-        return drafters.draft_action(insight, action_type)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    # The tenant is already bound by the middleware; the insight is only known
+    # here, and binding it is what lets the cost query answer "cost per insight".
+    with context.bind(insight_id=insight["insight_id"]):
+        try:
+            return drafters.draft_action(insight, action_type)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc

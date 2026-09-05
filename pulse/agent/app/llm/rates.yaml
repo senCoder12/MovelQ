@@ -1,0 +1,31 @@
+# pulse.llm.rates -- USD per 1,000,000 tokens, by model.
+#
+# Read by app/llm/cost.py to turn ledger rows into an estimate. Deliberately a
+# file rather than environment variables: this is a small table that changes
+# when a provider changes its price list, and it belongs in review alongside the
+# query that uses it.
+#
+# The figures are Google's published list prices for the Gemini 2.5 family, in
+# USD per million tokens. They are an *estimate*: they ignore batch discounts,
+# free-tier allowances and the cheaper long-context tiers, and GET
+# /api/metrics/cost says so in its output rather than presenting a number that
+# looks like an invoice.
+#
+# An unknown model is not priced. The cost query counts its tokens, reports it
+# by name under `unpriced_models`, and leaves it out of the total -- which is
+# the honest failure mode. Silently pricing it at zero would understate the
+# bill; silently pricing it at some default would invent one.
+
+pulse:
+  llm:
+    currency: USD
+    rates:
+      gemini-2.5-pro:
+        input: 1.25
+        output: 10.00
+      gemini-2.5-flash:
+        input: 0.30
+        output: 2.50
+      gemini-2.5-flash-lite:
+        input: 0.10
+        output: 0.40

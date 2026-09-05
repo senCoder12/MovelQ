@@ -13,6 +13,10 @@ dependencies = [
     "pydantic",
     "python-dotenv",
     "google-genai",
+    # Token ledger writes and the cost query. The agent talks to Postgres
+    # directly rather than through the backend: a ledger write sits on the
+    # latency path of every model call.
+    "psycopg[binary,pool]",
 ]
 
 [project.optional-dependencies]

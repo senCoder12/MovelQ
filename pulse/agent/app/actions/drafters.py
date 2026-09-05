@@ -445,7 +445,11 @@ def _call_llm(insight: dict[str, Any], action_type: str, context: dict[str, Any]
     if feedback:
         prompt += f"\n\n## Correction required\n\n{feedback}"
     try:
-        raw = llm_client.complete(system="Respond with strict JSON only, no markdown fences.", prompt=prompt)
+        raw = llm_client.complete(
+            system="Respond with strict JSON only, no markdown fences.",
+            prompt=prompt,
+            call_type="draft_action",
+        )
     except Exception:
         # Missing key, network failure, rate limit -- degrade to the fallback
         # rather than a 500. See module docstring.

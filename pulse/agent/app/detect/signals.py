@@ -577,3 +577,106 @@ def tenants() -> list[str]:
     with db.connect(read_only=True) as conn:
         rows = conn.execute("SELECT DISTINCT tenant_id FROM fact_trip ORDER BY 1").fetchall()
     return [row[0] for row in rows]
+
+
+# --- Scan orchestration ------------------------------------------------------
+# What a scheduled run needs on top of detect_tenant: a window that does not come
+# from the wall clock, and the counts scan_run records.
+
+#: How far back a scan looks, in days, from the warehouse's own latest trip date.
+DEFAULT_LOOKBACK_DAYS = 14
+
+#: The table the scan window is anchored to. Metrics on other tables are NOT
+#: clamped to it -- see `scan` for why.
+ANCHOR_TABLE = "fact_trip"
+
+
+def anchor_window(tenant_id: str, lookback_days: int = DEFAULT_LOOKBACK_DAYS) -> tuple[str, str] | None:
+    """The scan window: the warehouse's latest trip date, and that minus
+    ``lookback_days``.
+
+    Derived from the data, never from ``date.today()``. The ride data in this
+    warehouse is July 2026; a scheduled job that took the system clock would
+    scan an empty window, find nothing, and write a run that looks like a
+    healthy zero-signal success. The warehouse is the only thing that knows when
+    "recently" was.
+
+    None when the tenant has no trips at all.
+    """
+    row = db.fetch_one(
+        tenant_id,
+        f"SELECT MAX(trip_date) FROM {ANCHOR_TABLE} WHERE tenant_id = ?",
+    )
+    if not row or row[0] is None:
+        return None
+    end = pd.Timestamp(row[0]).date()
+    start = end - pd.Timedelta(days=lookback_days)
+    return str(start), str(end)
+
+
+def trips_in_window(tenant_id: str, start: str, end: str) -> int:
+    """Rows of fact_trip the scan looked at. The denominator behind "scanned
+    N trips" in the UI status line."""
+    row = db.fetch_one(
+        tenant_id,
+        f"SELECT COUNT(*) FROM {ANCHOR_TABLE} WHERE tenant_id = ? AND trip_date BETWEEN ? AND ?",
+        [start, end],
+    )
+    return int(row[0]) if row and row[0] is not None else 0
+
+
+def scan(tenant_id: str, lookback_days: int = DEFAULT_LOOKBACK_DAYS) -> dict[str, Any]:
+    """One detection pass over the anchored window, plus the counts a scan_run
+    row needs.
+
+    The window is applied to metrics measured on ``fact_trip`` and to those only.
+    The other fact tables do not cover the same period -- employee legs run from
+    May, billing is keyed on fortnightly cycles that also start in May -- and
+    clamping them to a fact_trip window silently truncates them. That is not
+    hypothetical: measured against this warehouse, a global 14-day clamp drops
+    ev_contract_mismatch_rate for both orbit and pinnacle entirely, because
+    their billing cycles begin before the window does. Same trap ``window_for``
+    documents, one level up.
+
+    So ``window_start``/``window_end`` in the result are the scan's anchor -- the
+    trip window it is reporting on, and the thing that must never come from the
+    system clock -- while a metric on another table still states its own range in
+    ``metric.window``.
+    """
+    window = anchor_window(tenant_id, lookback_days)
+    if window is None:
+        return {
+            "tenant_id": tenant_id,
+            "window_start": None,
+            "window_end": None,
+            "trips_scanned": 0,
+            "signals_detected": 0,
+            "insights": [],
+        }
+
+    start, end = window
+    anchored_ids = {
+        metric["id"] for metric in compiler.load_registry()["metrics"]
+        if metric.get("table") == ANCHOR_TABLE
+    }
+
+    insights: list[dict[str, Any]] = []
+    for metric in compiler.load_registry()["metrics"]:
+        if metric["id"] in anchored_ids:
+            insight = detect_metric(tenant_id, metric, start, end)
+        else:
+            insight = detect_metric(tenant_id, metric)
+        if insight is not None:
+            insights.append(insight)
+    insights.sort(key=lambda item: item["severity"], reverse=True)
+
+    return {
+        "tenant_id": tenant_id,
+        "window_start": start,
+        "window_end": end,
+        "trips_scanned": trips_in_window(tenant_id, start, end),
+        # Metrics that breached their target. What survives persistence and
+        # persona assembly is counted by the caller as signals_surfaced.
+        "signals_detected": len(insights),
+        "insights": insights,
+    }

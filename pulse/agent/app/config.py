@@ -13,6 +13,12 @@ from pydantic import BaseModel, Field
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+# The token ledger needs the platform database, and those credentials already live
+# in exactly one gitignored file -- backend/.env, which DotenvEnvironmentPostProcessor
+# reads on the Java side. Loading it here too means one file to fill in rather than
+# the same Neon URI pasted into two. agent/.env is loaded first and wins, so the
+# agent can still be pointed at a different database when that is wanted.
+load_dotenv(REPO_ROOT / "backend" / ".env")
 
 
 def _path(env_key: str, default: str) -> Path:

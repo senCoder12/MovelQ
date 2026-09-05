@@ -1,0 +1,124 @@
+# Golden questions for insight-scoped chat.
+#
+# 24 entries, three per intent, run by eval/run_eval.py on every change. Two
+# things are asserted for each: the router picks the right intent (and the
+# right slots, where a slot is stated), and every number in the rendered answer
+# appears in the source packet. The second is the one that matters -- a correct
+# intent that answers with an invented figure is the failure mode this whole
+# design exists to prevent.
+#
+# The phrasings are deliberately uneven. Roughly a third are hostile, clipped,
+# or sceptical, because that is how a question sounds when someone is about to
+# act on the answer in a room full of people. "prove it" is a real question and
+# has to route somewhere sensible.
+#
+# insight: which packet to run against. Only "delay_reconciliation_gap" for
+# now -- one insight, deeply, is the demo.
+# expect_intent: the required classification.
+# expect_slots: optional; only the keys listed are checked.
+# note: why this entry is here, when it isn't obvious.
+
+insight: delay_reconciliation_gap
+tenant: vanta
+
+questions:
+  # --- WHY_THIS_DIMENSION ----------------------------------------------------
+  - q: "why the :16 codes and not the vendor?"
+    expect_intent: WHY_THIS_DIMENSION
+    note: the demo question. Names one dimension and rejects another in the same breath.
+  - q: "how did you decide it's the office and not the shift type?"
+    expect_intent: WHY_THIS_DIMENSION
+  - q: "why is this the dimension that matters"
+    expect_intent: WHY_THIS_DIMENSION
+
+  # --- IS_SAMPLE_SUFFICIENT --------------------------------------------------
+  - q: "is 29,854 trips enough?"
+    expect_intent: IS_SAMPLE_SUFFICIENT
+    note: >-
+      The number in the question is the user's, not ours, and must not appear
+      in the answer -- the answer cites the packet's own n.
+  - q: "prove it"
+    expect_intent: IS_SAMPLE_SUFFICIENT
+    note: >-
+      Hostile and contentless. Routes to the strongest evidence we have for the
+      finding being real rather than to a refusal.
+  - q: "could this just be noise"
+    expect_intent: IS_SAMPLE_SUFFICIENT
+
+  # --- CONTROL_CHALLENGE -----------------------------------------------------
+  - q: "couldn't this just be the vendor?"
+    expect_intent: CONTROL_CHALLENGE
+    expect_slots: {control_name: vendor}
+  - q: "isn't this just evening trips?"
+    expect_intent: CONTROL_CHALLENGE
+    expect_slots: {control_name: hour}
+  - q: "how do you know it's not the drivers"
+    expect_intent: CONTROL_CHALLENGE
+    expect_slots: {control_name: other}
+    note: >-
+      Drivers are not a control we ran. The answer must say so rather than
+      answering with the vendor control, which is the nearest thing we have and
+      not the same claim.
+
+  # --- WHAT_IF_DATA_WRONG ----------------------------------------------------
+  - q: "what if the excluded rows change this?"
+    expect_intent: WHAT_IF_DATA_WRONG
+  - q: "how much data did you throw away"
+    expect_intent: WHAT_IF_DATA_WRONG
+  - q: "this is probably garbage data isn't it"
+    expect_intent: WHAT_IF_DATA_WRONG
+    note: Hostile phrasing of the data-quality question.
+
+  # --- WHEN_DID_IT_START -----------------------------------------------------
+  - q: "when did this begin?"
+    expect_intent: WHEN_DID_IT_START
+  - q: "how long has this been going on"
+    expect_intent: WHEN_DID_IT_START
+  - q: "is this new or has it always been like this"
+    expect_intent: WHEN_DID_IT_START
+
+  # --- SHOW_ME_EXAMPLES ------------------------------------------------------
+  - q: "show me some of these trips"
+    expect_intent: SHOW_ME_EXAMPLES
+    expect_slots: {limit: 10}
+    note: No count asked for, so the default applies.
+  - q: "can I see 20 examples"
+    expect_intent: SHOW_ME_EXAMPLES
+    expect_slots: {limit: 20}
+  - q: "give me the actual rows"
+    expect_intent: SHOW_ME_EXAMPLES
+
+  # --- COMPARE_ENTITY --------------------------------------------------------
+  - q: "how does Denver Office compare to the others?"
+    expect_intent: COMPARE_ENTITY
+    expect_slots: {entity_value: Denver Office}
+  - q: "what about AUTO"
+    expect_intent: COMPARE_ENTITY
+    expect_slots: {entity_value: AUTO}
+    note: Clipped. Only classifiable because the packet already ranks that value.
+  - q: "is Vikram worse than the rest"
+    expect_intent: COMPARE_ENTITY
+    note: >-
+      Names an entity that is NOT in this packet. The intent is still a
+      comparison; the answer must say it was not among the contributors rather
+      than compare something it does not have.
+
+  # --- WHAT_SHOULD_I_DO ------------------------------------------------------
+  - q: "what do you recommend?"
+    expect_intent: WHAT_SHOULD_I_DO
+  - q: "so what should I actually do about this"
+    expect_intent: WHAT_SHOULD_I_DO
+  - q: "what's the next step here"
+    expect_intent: WHAT_SHOULD_I_DO
+
+  # --- OUT_OF_SCOPE ----------------------------------------------------------
+  - q: "what's the weather"
+    expect_intent: OUT_OF_SCOPE
+  - q: "summarise all our vendors"
+    expect_intent: OUT_OF_SCOPE
+    note: >-
+      Plausible, adjacent, and outside the scope. This is the one a demo
+      audience actually asks, and the refusal has to be clean.
+  - q: "what did this look like last quarter"
+    expect_intent: OUT_OF_SCOPE
+    note: The packet covers one window. Another period is not a question we hold data for.
