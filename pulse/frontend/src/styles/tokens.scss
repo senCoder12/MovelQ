@@ -1,0 +1,131 @@
+// Pulse design tokens.
+//
+// Plain CSS custom properties on :root -- deliberately NOT SCSS variables,
+// since components are plain .css/.scss files reading var(--pulse-*) and
+// this file must be the single place raw color/spacing values are allowed
+// to appear. No component may declare a raw hex/rgb value anywhere.
+//
+// Loaded first in angular.json's styles array (before ng-zorro theme.less
+// and styles.scss) so every token is available to everything downstream.
+
+:root {
+  // --- Surfaces ---
+  --pulse-surface-page: #f5f6fa;
+  --pulse-surface-card: #ffffff;
+  --pulse-surface-raised: #fafafc;
+  --pulse-surface-hover: #eef0f6;
+
+  // --- Text ---
+  --pulse-text-primary: #1a1d29;
+  --pulse-text-secondary: #4b4f5e;
+  --pulse-text-muted: #8a8e9c;
+
+  // --- Borders ---
+  --pulse-border-default: #dcdfe6;
+  --pulse-border-subtle: #ecedf2;
+
+  // --- Radius ---
+  --pulse-radius-sm: 4px;
+  --pulse-radius-md: 8px;
+  --pulse-radius-lg: 14px;
+
+  // --- Typography (mirrored in theme.less @font-family -- Less can't read a CSS custom
+  // property inside ng-zorro's mixins, so keep this string in sync by hand) ---
+  --pulse-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  // --- Spacing scale ---
+  --pulse-space-1: 4px;
+  --pulse-space-2: 8px;
+  --pulse-space-3: 12px;
+  --pulse-space-4: 16px;
+  --pulse-space-5: 24px;
+  --pulse-space-6: 32px;
+
+  // --- Shadows (raised surfaces) ---
+  --pulse-shadow-sm: 0 1px 2px rgba(20, 22, 30, 0.06);
+  --pulse-shadow-md: 0 4px 12px rgba(20, 22, 30, 0.1);
+
+  // --- Severity ramp (severity: int 0-100) ---
+  // low <50, medium 50-79, high 80-100
+  --pulse-severity-low-bg: #e3f6ed;
+  --pulse-severity-low-fg: #106b45;
+  --pulse-severity-medium-bg: #fff2d9;
+  --pulse-severity-medium-fg: #8a5a00;
+  --pulse-severity-high-bg: #fce3e1;
+  --pulse-severity-high-fg: #b3261e;
+
+  // --- Data-quality confidence (high/medium/low) ---
+  // Kept distinct from the severity ramp: confidence "high" is good (green),
+  // the opposite polarity of severity "high" (bad/red), so the two must
+  // never share a variable.
+  --pulse-confidence-high-bg: #e3f6ed;
+  --pulse-confidence-high-fg: #106b45;
+  --pulse-confidence-medium-bg: #fff2d9;
+  --pulse-confidence-medium-fg: #8a5a00;
+  --pulse-confidence-low-bg: #fce3e1;
+  --pulse-confidence-low-fg: #b3261e;
+
+  // --- Small categorical set (attribution-bar segments) ---
+  --pulse-cat-1: #4f46e5;
+  --pulse-cat-2: #0ea5a4;
+  --pulse-cat-3: #f59e0b;
+  --pulse-cat-4: #ec4899;
+  --pulse-cat-5: #64748b;
+  --pulse-cat-other: #cbd5e1;
+
+  // --- Brand / primary (mirrored in theme.less @primary-color) ---
+  --pulse-primary: #4f46e5;
+  --pulse-primary-fg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    // --- Surfaces ---
+    --pulse-surface-page: #14161c;
+    --pulse-surface-card: #1c1f27;
+    --pulse-surface-raised: #232733;
+    --pulse-surface-hover: #2a2f3b;
+
+    // --- Text ---
+    --pulse-text-primary: #f0f1f5;
+    --pulse-text-secondary: #c3c6d0;
+    --pulse-text-muted: #9599a6;
+
+    // --- Borders ---
+    --pulse-border-default: #333846;
+    --pulse-border-subtle: #262a34;
+
+    // --- Shadows ---
+    --pulse-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --pulse-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+
+    // --- Severity ramp ---
+    --pulse-severity-low-bg: #123526;
+    --pulse-severity-low-fg: #4ade80;
+    --pulse-severity-medium-bg: #3d2e0a;
+    --pulse-severity-medium-fg: #fbbf24;
+    --pulse-severity-high-bg: #3b1615;
+    --pulse-severity-high-fg: #f87171;
+
+    // --- Data-quality confidence ---
+    --pulse-confidence-high-bg: #123526;
+    --pulse-confidence-high-fg: #4ade80;
+    --pulse-confidence-medium-bg: #3d2e0a;
+    --pulse-confidence-medium-fg: #fbbf24;
+    --pulse-confidence-low-bg: #3b1615;
+    --pulse-confidence-low-fg: #f87171;
+
+    // --- Small categorical set ---
+    --pulse-cat-1: #818cf8;
+    --pulse-cat-2: #2dd4bf;
+    --pulse-cat-3: #fbbf24;
+    --pulse-cat-4: #f472b6;
+    --pulse-cat-5: #94a3b8;
+    --pulse-cat-other: #3f4657;
+
+    // --- Brand / primary ---
+    --pulse-primary: #818cf8;
+    --pulse-primary-fg: #14161c;
+  }
+}

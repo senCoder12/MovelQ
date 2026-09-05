@@ -1,0 +1,57 @@
+.reference-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pulse-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reference-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--pulse-space-2);
+  padding: var(--pulse-space-1) var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-left-width: 3px;
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-card);
+  font-size: 0.8125rem;
+}
+
+.reference-chip--historical {
+  border-left-color: var(--pulse-cat-1);
+}
+
+.reference-chip--sla {
+  border-left-color: var(--pulse-cat-2);
+}
+
+.reference-chip--peer {
+  border-left-color: var(--pulse-cat-3);
+}
+
+.reference-chip--industry {
+  border-left-color: var(--pulse-cat-4);
+}
+
+.reference-chip--computed {
+  border-left-color: var(--pulse-cat-5);
+}
+
+.reference-chip__type {
+  color: var(--pulse-text-muted);
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+}
+
+.reference-chip__label {
+  color: var(--pulse-text-secondary);
+}
+
+.reference-chip__value {
+  color: var(--pulse-text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,55 @@
+<nz-drawer [nzVisible]="visible()" nzTitle="Query trace" nzWidth="480" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    @if (insight(); as insight) {
+      <dl class="trace-meta">
+        <div class="trace-meta__row">
+          <dt>Metric</dt>
+          <dd>{{ insight.metric.id }}</dd>
+        </div>
+        <div class="trace-meta__row">
+          <dt>Window</dt>
+          <dd>{{ insight.metric.window }}</dd>
+        </div>
+      </dl>
+
+      @if (loading()) {
+        <p class="trace-status">Loading trace&hellip;</p>
+      } @else if (loadError()) {
+        <p class="trace-status trace-status--error">Unable to load trace.</p>
+      } @else {
+        <ul class="trace-entries">
+          @for (entry of entries(); track entry.query_id) {
+            <li class="trace-entry">
+              <div class="trace-entry__header">
+                <span class="trace-entry__query-id">{{ entry.query_id }}</span>
+                <span
+                  class="trace-entry__validation"
+                  [class]="'trace-entry__validation--' + entry.validation.status"
+                >
+                  {{ entry.validation.status }}
+                </span>
+              </div>
+
+              <div class="trace-entry__counts">
+                <span>numerator {{ entry.numerator }}</span>
+                <span>denominator {{ entry.denominator }}</span>
+              </div>
+
+              <p class="trace-entry__params"><code>{{ formatParams(entry.params) }}</code></p>
+
+              @if (entry.exclusions.length > 0) {
+                <ul class="trace-entry__exclusions">
+                  @for (exclusion of entry.exclusions; track exclusion) {
+                    <li>{{ exclusion }}</li>
+                  }
+                </ul>
+              }
+
+              <p class="trace-entry__validation-notes">{{ entry.validation.notes }}</p>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </ng-container>
+</nz-drawer>

@@ -1,0 +1,113 @@
+.trace-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-2);
+  margin: 0 0 var(--pulse-space-5);
+}
+
+.trace-meta__row {
+  display: flex;
+  gap: var(--pulse-space-2);
+  font-size: 0.8125rem;
+}
+
+.trace-meta__row dt {
+  color: var(--pulse-text-muted);
+}
+
+.trace-meta__row dd {
+  margin: 0;
+  color: var(--pulse-text-primary);
+  font-weight: 600;
+}
+
+.trace-status {
+  color: var(--pulse-text-muted);
+}
+
+.trace-status--error {
+  color: var(--pulse-severity-high-fg);
+}
+
+.trace-entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trace-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pulse-space-2);
+  padding: var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-raised);
+}
+
+.trace-entry__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pulse-space-2);
+}
+
+.trace-entry__query-id {
+  font-weight: 600;
+  color: var(--pulse-text-primary);
+}
+
+.trace-entry__validation {
+  padding: 0.0625rem var(--pulse-space-2);
+  border-radius: var(--pulse-radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trace-entry__validation--pass {
+  background: var(--pulse-confidence-high-bg);
+  color: var(--pulse-confidence-high-fg);
+}
+
+.trace-entry__validation--warn {
+  background: var(--pulse-confidence-medium-bg);
+  color: var(--pulse-confidence-medium-fg);
+}
+
+.trace-entry__validation--fail {
+  background: var(--pulse-confidence-low-bg);
+  color: var(--pulse-confidence-low-fg);
+}
+
+.trace-entry__counts {
+  display: flex;
+  gap: var(--pulse-space-3);
+  font-size: 0.8125rem;
+  color: var(--pulse-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.trace-entry__params {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--pulse-text-secondary);
+  word-break: break-all;
+}
+
+.trace-entry__exclusions {
+  margin: 0;
+  padding-left: var(--pulse-space-5);
+  font-size: 0.75rem;
+  color: var(--pulse-text-muted);
+}
+
+.trace-entry__validation-notes {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--pulse-text-muted);
+}

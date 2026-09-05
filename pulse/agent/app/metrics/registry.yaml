@@ -1,0 +1,169 @@
+# Pulse metric registry.
+#
+# app/metrics/compiler.py compiles each metric to a single-table query of
+# exactly this shape:
+#
+#   SELECT {dim} AS dim_value,
+#          date_trunc('{grain}', trip_date) AS period,
+#          {numerator}::double / NULLIF({denominator},0) AS value,
+#          {denominator} AS n
+#   FROM {table}
+#   WHERE tenant_id = ? AND trip_date BETWEEN ? AND ?
+#     AND (dq_flags & {excluded_mask}) = 0
+#   GROUP BY 1,2
+#
+# ride_data is July-only (four weeks), so 'week' grain gives just four
+# baseline points -- not enough for EWMA. Default grain is 'day'.
+#
+# exclude_flags names a metric's own dq_flags (app/ingest/quality.py) to
+# EXCLUDE from the denominator. The rule applied throughout: exclude every
+# flag valid for the metric's table except the one flag that defines the
+# metric's own numerator (excluding on your own predicate would zero the
+# numerator out). delay_reconciliation_gap IS the DELAY_UNREPORTED
+# definition, so DELAY_UNREPORTED is deliberately left out of its
+# exclude_flags; same logic for unbilled_km_rate/BILLED_KM_ZERO and
+# ev_contract_mismatch_rate/FUEL_CONTRACT_MISMATCH.
+
+default_grain: day
+supported_grains: [day, week]
+
+metrics:
+  # --- reconciliation metrics (the demo) ------------------------------
+
+  - id: delay_reconciliation_gap
+    name: Delay reconciliation gap
+    unit: rate
+    table: fact_trip
+    numerator: "COUNT(*) FILTER (WHERE computed_arrival_delay_min > 10 AND reported_delay_minutes = 0)"
+    denominator: "COUNT(*)"
+    direction: lower_better
+    min_sample: 100
+    slice_by: [vendor_id, office, shift_bucket, shift_suffix, tenant_id, route_source]
+    exclude_flags: [ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 0.15, critical: 0.30}
+
+  - id: unbilled_km_rate
+    name: Unbilled km rate
+    unit: rate
+    table: fact_trip_billing
+    numerator: "COUNT(*) FILTER (WHERE billed_km = 0 AND traveled_km > 0)"
+    denominator: "COUNT(*)"
+    direction: lower_better
+    min_sample: 100
+    slice_by: [vendor, office, tenant_id, contract]
+    exclude_flags: [NEGATIVE_COST, FUEL_CONTRACT_MISMATCH, SLAB_MISSING]
+    targets: {warn: 0.10, critical: 0.25}
+
+  - id: ev_contract_mismatch_rate
+    name: EV contract / fuel mismatch rate
+    unit: rate
+    table: fact_trip_billing
+    numerator: >-
+      COUNT(*) FILTER (WHERE contract ILIKE '%EV%'
+        AND NOT (actual_cab_fuel_type ILIKE '%ELEC%' OR actual_cab_fuel_type ILIKE '%EV%'))
+    denominator: "COUNT(*) FILTER (WHERE contract ILIKE '%EV%')"
+    direction: lower_better
+    min_sample: 30
+    slice_by: [vendor, office, tenant_id]
+    exclude_flags: [BILLED_KM_ZERO, NEGATIVE_COST, SLAB_MISSING]
+    targets: {warn: 0.02, critical: 0.10}
+
+  - id: escort_coverage_night_female
+    name: Escort coverage, night shifts, female employees
+    unit: rate
+    table: fact_trip_employee
+    numerator: >-
+      COUNT(*) FILTER (WHERE gender ILIKE 'FEMALE' AND shift_bucket = 'night'
+        AND NOT (UPPER(TRIM(actual_escort)) IN ('FALSE','0','NO','F')))
+    denominator: "COUNT(*) FILTER (WHERE gender ILIKE 'FEMALE' AND shift_bucket = 'night')"
+    direction: higher_better
+    min_sample: 100
+    slice_by: [tenant_id, office, site_code, emp_role]
+    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 0.85, critical: 0.65}
+    note: >-
+      Named "coverage", not "compliance" -- there is no policy document
+      confirming an escort requirement, only the observed rate.
+
+  # --- rate metrics ----------------------------------------------------
+
+  - id: ota
+    name: On-time arrival
+    unit: rate
+    table: fact_trip
+    numerator: "COUNT(*) FILTER (WHERE computed_arrival_delay_min <= 0)"
+    denominator: "COUNT(*)"
+    direction: higher_better
+    min_sample: 100
+    slice_by: [vendor_id, office, shift_bucket, tenant_id, route_source]
+    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 0.75, critical: 0.60}
+
+  - id: on_time_departure
+    name: On-time departure
+    unit: rate
+    table: fact_trip
+    numerator: "COUNT(*) FILTER (WHERE computed_start_delay_min <= 0)"
+    denominator: "COUNT(*)"
+    direction: higher_better
+    min_sample: 100
+    slice_by: [vendor_id, office, shift_bucket, tenant_id]
+    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 0.75, critical: 0.60}
+
+  - id: p90_arrival_delay_min
+    name: P90 arrival delay
+    unit: minutes
+    table: fact_trip
+    # PERCENTILE_CONT is an ordered-set aggregate, not a plain ratio; the
+    # "* COUNT(...) then / COUNT(...)" round-trip keeps the compiler's
+    # fixed numerator/denominator template applicable without a special
+    # case, while denominator still reports the true sample size as n.
+    numerator: "PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY computed_arrival_delay_min) * COUNT(computed_arrival_delay_min)"
+    denominator: "COUNT(computed_arrival_delay_min)"
+    direction: lower_better
+    min_sample: 100
+    slice_by: [vendor_id, office, shift_bucket, tenant_id]
+    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 20, critical: 45}
+
+  - id: cost_per_employee_trip
+    name: Cost per employee-trip
+    unit: currency_per_employee
+    table: fact_trip_billing
+    numerator: "SUM(trip_cost)"
+    denominator: "SUM(actual_employee_cnt)"
+    direction: lower_better
+    min_sample: 100
+    slice_by: [vendor, office, tenant_id, contract]
+    exclude_flags: [BILLED_KM_ZERO, NEGATIVE_COST, FUEL_CONTRACT_MISMATCH, SLAB_MISSING]
+    targets: {warn: null, critical: null}
+    note: >-
+      No baseline threshold set. Detection/alerting is out of scope for
+      this layer; populate warn/critical once finance defines an
+      acceptable per-employee cost band. n here is a summed employee
+      count, not a row count -- min_sample should be read accordingly.
+
+  - id: vehicle_utilisation
+    name: Vehicle utilisation
+    unit: ratio
+    table: fact_trip
+    numerator: "SUM(actual_employee_cnt)"
+    denominator: "SUM(actual_cab_capacity)"
+    direction: higher_better
+    min_sample: 100
+    slice_by: [vendor_id, office, tenant_id, product_type]
+    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 0.60, critical: 0.40}
+
+  - id: no_show_rate
+    name: No-show rate
+    unit: rate
+    table: fact_trip
+    numerator: "SUM(noshow_cnt)"
+    denominator: "SUM(planned_employee_cnt)"
+    direction: lower_better
+    min_sample: 100
+    slice_by: [vendor_id, office, tenant_id, shift_bucket]
+    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    targets: {warn: 0.05, critical: 0.15}

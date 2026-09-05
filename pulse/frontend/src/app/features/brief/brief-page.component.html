@@ -1,0 +1,44 @@
+<div class="brief-page">
+  <header class="brief-page__header">
+    <div>
+      <h1 class="brief-page__title">Pulse brief</h1>
+      @if (insights(); as list) {
+        <p class="brief-page__subtitle">
+          Agent ran {{ generatedAt() }} &middot; scanned {{ scannedTrips() }} trips &middot;
+          {{ list.length }} of {{ list.length }} signals worth your time
+        </p>
+      } @else {
+        <p class="brief-page__subtitle">Persona-scoped feed of current insights</p>
+      }
+    </div>
+    <div class="brief-page__personas">
+      @for (option of personas; track option) {
+        <button
+          type="button"
+          class="brief-page__persona-button"
+          [class.brief-page__persona-button--active]="option === persona()"
+          (click)="selectPersona(option)"
+        >
+          {{ option }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <nz-skeleton [nzLoading]="loading()" [nzActive]="true" [nzParagraph]="{ rows: 6 }">
+    @if (insights() && insights()!.length === 0) {
+      <p class="brief-page__empty">No insights for this persona right now.</p>
+    }
+    <div class="brief-page__list">
+      @for (insight of insights(); track insight.insight_id) {
+        <app-insight-card
+          [insight]="insight"
+          (showMath)="openTrace($event)"
+          (actionClicked)="onActionClicked($event)"
+        />
+      }
+    </div>
+  </nz-skeleton>
+</div>
+
+<app-trace-drawer [visible]="drawerVisible()" [insight]="traceInsight()" (closed)="closeDrawer()" />

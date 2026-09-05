@@ -1,0 +1,26 @@
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  padding: var(--pulse-space-1) var(--pulse-space-2);
+  border-radius: var(--pulse-radius-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.severity-badge--low {
+  background: var(--pulse-severity-low-bg);
+  color: var(--pulse-severity-low-fg);
+}
+
+.severity-badge--medium {
+  background: var(--pulse-severity-medium-bg);
+  color: var(--pulse-severity-medium-fg);
+}
+
+.severity-badge--high {
+  background: var(--pulse-severity-high-bg);
+  color: var(--pulse-severity-high-fg);
+}

@@ -1,0 +1,54 @@
+.control-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pulse-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.control-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--pulse-space-1);
+  padding: var(--pulse-space-1) var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-card);
+  font-size: 0.8125rem;
+  color: var(--pulse-text-secondary);
+}
+
+.control-chip--fails {
+  border-color: var(--pulse-severity-high-fg);
+  color: var(--pulse-severity-high-fg);
+}
+
+.control-chip__icon {
+  color: var(--pulse-severity-low-fg);
+}
+
+.control-chip--fails .control-chip__icon {
+  color: inherit;
+}
+
+.control-chip__status {
+  font-weight: 600;
+}
+
+.control-chip__name {
+  color: var(--pulse-text-primary);
+}
+
+.control-chip--fails .control-chip__name {
+  color: inherit;
+}
+
+.control-chip__gap {
+  font-variant-numeric: tabular-nums;
+  color: var(--pulse-text-muted);
+}
+
+.control-chip--fails .control-chip__gap {
+  color: inherit;
+}

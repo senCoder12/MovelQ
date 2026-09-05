@@ -1,0 +1,169 @@
+openapi: 3.1.0
+info:
+  title: Pulse API
+  version: 0.1.0
+  description: >
+    Gateway contract served by pulse-backend. Backend proxies to the agent
+    service and applies tenant filtering; no detection/business logic yet.
+
+servers:
+  - url: /api
+
+components:
+  parameters:
+    tenantHeader:
+      name: X-Tenant-Id
+      in: header
+      required: false
+      description: Tenant scoping the request. Insights with no tenant-scoped entity are always included.
+      schema:
+        type: string
+    personaParam:
+      name: persona
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [ops, strategic, shift]
+    insightId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    InsightPacket:
+      $ref: 'insight.schema.json'
+
+    BriefResponse:
+      type: object
+      additionalProperties: false
+      required: [persona, generated_at, insights]
+      properties:
+        persona:
+          type: string
+          enum: [ops, strategic, shift]
+        generated_at:
+          type: string
+          format: date-time
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsightPacket'
+
+    TraceResponse:
+      type: object
+      additionalProperties: false
+      required: [insight_id, trace]
+      properties:
+        insight_id:
+          type: string
+        trace:
+          type: array
+          items:
+            $ref: 'insight.schema.json#/$defs/trace_entry'
+
+    DataQualityEntry:
+      type: object
+      additionalProperties: false
+      required: [insight_id, metric_id, data_quality]
+      properties:
+        insight_id:
+          type: string
+        metric_id:
+          type: string
+        data_quality:
+          $ref: 'insight.schema.json#/$defs/data_quality'
+
+    DataQualityResponse:
+      type: object
+      additionalProperties: false
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataQualityEntry'
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [status, message]
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+
+  responses:
+    NotFound:
+      description: No insight with that id.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+paths:
+  /brief:
+    get:
+      operationId: getBrief
+      summary: Persona-scoped feed of current insights.
+      parameters:
+        - $ref: '#/components/parameters/personaParam'
+        - $ref: '#/components/parameters/tenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BriefResponse'
+
+  /insights/{id}:
+    get:
+      operationId: getInsight
+      summary: Single insight packet by id.
+      parameters:
+        - $ref: '#/components/parameters/insightId'
+        - $ref: '#/components/parameters/tenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightPacket'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /insights/{id}/trace:
+    get:
+      operationId: getInsightTrace
+      summary: Query trace backing one insight, for the drill-down drawer.
+      parameters:
+        - $ref: '#/components/parameters/insightId'
+        - $ref: '#/components/parameters/tenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /data-quality:
+    get:
+      operationId: getDataQuality
+      summary: Data-quality summary (excluded_pct, confidence) across current insights.
+      parameters:
+        - $ref: '#/components/parameters/tenantHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataQualityResponse'

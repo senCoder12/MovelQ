@@ -1,8 +1,154 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://moveinsync.com/pulse/contracts/insight.schema.json",
-  "title": "Insight",
+  "title": "InsightPacket",
   "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "additionalProperties": false,
+  "required": [
+    "insight_id", "metric", "entity", "references", "attribution", "controls",
+    "coincident_events", "impact", "data_quality", "severity", "trace", "narrative"
+  ],
+  "properties": {
+    "insight_id": { "type": "string", "minLength": 1 },
+    "metric": { "$ref": "#/$defs/metric" },
+    "entity": { "$ref": "#/$defs/entity" },
+    "references": { "type": "array", "items": { "$ref": "#/$defs/reference" } },
+    "attribution": { "type": "array", "items": { "$ref": "#/$defs/attribution" } },
+    "controls": { "type": "array", "items": { "$ref": "#/$defs/control" } },
+    "coincident_events": { "type": "array", "items": { "$ref": "#/$defs/coincident_event" } },
+    "impact": { "$ref": "#/$defs/impact" },
+    "data_quality": { "$ref": "#/$defs/data_quality" },
+    "severity": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "trace": { "type": "array", "items": { "$ref": "#/$defs/trace_entry" } },
+    "narrative": { "$ref": "#/$defs/narrative" }
+  },
+  "$defs": {
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "value", "unit", "n", "window"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "type": "number" },
+        "unit": { "type": "string" },
+        "n": { "type": "integer", "minimum": 0 },
+        "window": { "type": "string", "minLength": 1 }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dim", "id", "name"],
+      "properties": {
+        "dim": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "label", "value", "unit"],
+      "properties": {
+        "type": { "type": "string", "enum": ["historical", "sla", "peer", "industry", "computed"] },
+        "label": { "type": "string", "minLength": 1 },
+        "value": { "type": ["number", "string"] },
+        "unit": { "type": "string", "enum": ["percent", "minutes", "inr", "count", "text"] }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dim", "value", "contribution_pct", "n"],
+      "properties": {
+        "dim": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 },
+        "contribution_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "n": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["control", "gap_pp", "survives"],
+      "properties": {
+        "control": { "type": "string", "minLength": 1 },
+        "gap_pp": { "type": "number" },
+        "survives": { "type": "boolean" }
+      }
+    },
+    "coincident_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "date", "note"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "format": "date" },
+        "note": { "type": "string" }
+      }
+    },
+    "impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "affected_trips": { "type": "integer", "minimum": 0 },
+        "late_minutes_total": { "type": "number", "minimum": 0 },
+        "cost_inr_month": { "type": "number", "minimum": 0 }
+      }
+    },
+    "data_quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["excluded_pct", "confidence"],
+      "properties": {
+        "excluded_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+      }
+    },
+    "trace_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "params", "numerator", "denominator", "exclusions", "validation"],
+      "properties": {
+        "query_id": { "type": "string", "minLength": 1 },
+        "params": { "type": "object" },
+        "numerator": { "type": "integer", "minimum": 0 },
+        "denominator": { "type": "integer", "minimum": 0 },
+        "exclusions": { "type": "array", "items": { "type": "string" } },
+        "validation": { "$ref": "#/$defs/validation" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "notes"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "warn", "fail"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "recommended_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "title", "draft", "rationale"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "draft": { "type": "string" },
+        "rationale": { "type": "string" }
+      }
+    },
+    "narrative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headline", "body", "recommended_actions"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "body": { "type": "string" },
+        "recommended_actions": { "type": "array", "items": { "$ref": "#/$defs/recommended_action" } }
+      }
+    }
+  }
 }

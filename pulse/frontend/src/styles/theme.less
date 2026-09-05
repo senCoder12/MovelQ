@@ -1,0 +1,25 @@
+// Custom ng-zorro-antd theme entry point.
+//
+// Replaces the precompiled ng-zorro-antd.min.css so these variables can be
+// overridden. Less resolves the re-declarations below for the whole
+// stylesheet (standard ng-zorro custom-theme pattern).
+//
+// Less is compiled at build time and can't read tokens.scss's CSS custom
+// properties, so these four values are copied from tokens.scss by hand --
+// keep them in sync when tokens.scss changes:
+//   @primary-color      <- --pulse-primary (light)
+//   @border-radius-base <- --pulse-radius-md
+//   @border-color-base  <- --pulse-border-default (light)
+//   @font-family         <- --pulse-font-family
+//
+// Primary color: deep indigo (#4f46e5), matching --pulse-primary /
+// --pulse-cat-1 in tokens.scss. Chosen to be visually distinct from both
+// Ant's default blue (#1890ff) and every hue used in the severity ramp
+// (red/amber/green), so the brand accent never gets mistaken for a
+// severity or confidence signal.
+@import '../../node_modules/ng-zorro-antd/ng-zorro-antd.less';
+
+@primary-color: #4f46e5;
+@border-radius-base: 8px;
+@border-color-base: #dcdfe6;
+@font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;

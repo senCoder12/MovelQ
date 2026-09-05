@@ -1,0 +1,81 @@
+<article class="insight-card">
+  <header class="insight-card__header">
+    <app-severity-badge [severity]="insight().severity" />
+    <div class="insight-card__entity">
+      <span class="insight-card__entity-name">{{ insight().entity.name }}</span>
+      <span class="insight-card__entity-meta">{{ insight().entity.dim }} &middot; {{ insight().entity.id }}</span>
+    </div>
+    <button type="button" class="insight-card__trace-button" (click)="requestTrace()">
+      <span nz-icon nzType="history"></span>
+      Show the math
+    </button>
+  </header>
+
+  <h3 class="insight-card__headline">{{ insight().narrative.headline }}</h3>
+
+  @if (insight().references.length > 0) {
+    <app-reference-chips [references]="insight().references" />
+  }
+
+  @if (insight().narrative.body) {
+    <p class="insight-card__body">{{ insight().narrative.body }}</p>
+  }
+
+  @if (insight().attribution.length > 0) {
+    <section class="insight-card__section">
+      <h4 class="insight-card__section-title">Attribution</h4>
+      <app-attribution-bar [attribution]="insight().attribution" />
+    </section>
+  }
+
+  @if (insight().controls.length > 0) {
+    <section class="insight-card__section">
+      <h4 class="insight-card__section-title">Controls</h4>
+      <app-control-chips [controls]="insight().controls" />
+    </section>
+  }
+
+  <section class="insight-card__section">
+    <h4 class="insight-card__section-title">Impact</h4>
+    <app-impact-tiles [impact]="insight().impact" />
+  </section>
+
+  @if (insight().coincident_events.length > 0) {
+    <section class="insight-card__section">
+      <h4 class="insight-card__section-title">Coincident events</h4>
+      <ul class="insight-card__coincident-events">
+        @for (event of insight().coincident_events; track event.date + event.type) {
+          <li>{{ event.date }} &mdash; {{ event.type }}: {{ event.note }}</li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (insight().narrative.recommended_actions.length > 0) {
+    <section class="insight-card__section">
+      <h4 class="insight-card__section-title">Recommended actions</h4>
+      <ul class="insight-card__actions">
+        @for (action of insight().narrative.recommended_actions; track action.title) {
+          <li>
+            <button type="button" class="insight-card__action" (click)="clickAction(action)">
+              <div class="insight-card__action-heading">
+                <span class="insight-card__action-type">{{ action.type }}</span>
+                <span class="insight-card__action-title">{{ action.title }}</span>
+              </div>
+              @if (action.draft) {
+                <p class="insight-card__action-draft">{{ action.draft }}</p>
+              }
+              @if (action.rationale) {
+                <p class="insight-card__action-rationale">{{ action.rationale }}</p>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <footer class="insight-card__footer">
+    <app-data-quality-badge [dataQuality]="insight().data_quality" />
+  </footer>
+</article>

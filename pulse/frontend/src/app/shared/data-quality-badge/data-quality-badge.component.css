@@ -1,0 +1,7 @@
+.data-quality-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  font-size: 0.8125rem;
+  color: var(--pulse-text-muted);
+}
