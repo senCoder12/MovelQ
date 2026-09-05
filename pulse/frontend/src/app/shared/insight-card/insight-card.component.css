@@ -75,6 +75,29 @@
   color: var(--pulse-text-muted);
 }
 
+.card__alert-chip {
+  margin-left: auto;
+  padding: 2px 7px;
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-control);
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+  font-size: var(--pulse-text-label);
+  cursor: pointer;
+}
+
+.card__alert-chip:hover {
+  filter: brightness(1.05);
+}
+
+/* A repeat still unacknowledged reads muted, not warn -- it is a reminder
+   the system already raised once, not a fresh finding. */
+.card__alert-chip--pending {
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-muted);
+  border-color: var(--pulse-border-strong);
+}
+
 /* --- Lede --- */
 
 .card__lede {

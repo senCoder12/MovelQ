@@ -139,6 +139,14 @@
   text-align: center;
 }
 
+/* A second badge, not a replacement: signal count (how much was found) and
+   alert count (how much still needs a decision) are different numbers and
+   can both be nonzero at once. */
+.rail__badge--alert {
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+}
+
 .rail__dot {
   flex: none;
   width: 6px;
@@ -405,6 +413,12 @@
 
 .segmented__item--active:hover {
   color: var(--pulse-primary-fg);
+/* A stale/partial scan is a caution, not the same red alarm as a genuine
+   issue count -- muted tone instead of danger. */
+}
+.issue--muted {
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-muted);
 }
 
 .topbar__right {

@@ -111,6 +111,41 @@
   color: var(--pulse-primary-text);
 }
 
+/* --- Job status -------------------------------------------------------------
+   Minimal on purpose -- not operational paging, just "did the last scan run,
+   and what did it do". */
+
+.job-status {
+  display: flex;
+  align-items: center;
+  gap: var(--pulse-space-2);
+  margin-bottom: var(--pulse-space-4);
+  padding: var(--pulse-space-2) var(--pulse-space-3);
+  border: 1px solid var(--pulse-border-default);
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-surface-panel);
+  color: var(--pulse-text-secondary);
+  font-size: var(--pulse-text-label);
+}
+
+.job-status--warn {
+  border-color: var(--pulse-warn-soft);
+  background: var(--pulse-warn-soft);
+  color: var(--pulse-warn-text);
+}
+
+.job-status__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pulse-ok-text);
+}
+
+.job-status__dot--warn {
+  background: var(--pulse-warn-text);
+}
+
 /* --- Toolbar --------------------------------------------------------------- */
 
 .toolbar {

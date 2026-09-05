@@ -360,6 +360,45 @@ def draft_action(payload: dict) -> dict:
     return draft
 
 
+# Hardcoded response for POST /internal/evaluate-alerts -- what
+# agent/app/detect/alert_router.py's evaluate() would return for exactly
+# these three insights against agent/app/detect/alert_rules.yaml's five
+# seed rules, precomputed by hand rather than imported (this script stays
+# standalone -- no imports from agent/app, see the module docstring).
+# `known_entities` from the request is intentionally ignored: whether a
+# rescan re-fires r_new_bad_entity is not what the demo's "re-scan does not
+# re-fire" claim is about (that's r_recon_critical's cooldown, which Java
+# enforces regardless of what this endpoint returns) -- see
+# job/ScanService for why that still holds even though this mock is static.
+ALERT_CANDIDATES: list[dict] = [
+    {"rule_id": "r_recon_critical", "insight_id": "ins_001", "persona": "ops", "urgency": "immediate",
+     "channel": "in_app", "entity_dim": "fleet", "entity_value": "ALL", "cooldown_hours": 24},
+    {"rule_id": "r_new_bad_entity", "insight_id": "ins_001", "persona": "ops", "urgency": "daily",
+     "channel": "in_app", "entity_dim": "fleet", "entity_value": "ALL", "cooldown_hours": 24},
+    {"rule_id": "r_safety_coverage", "insight_id": "ins_002", "persona": "strategic", "urgency": "daily",
+     "channel": "in_app", "entity_dim": "segment", "entity_value": "night_female_escort", "cooldown_hours": 168},
+    {"rule_id": "r_new_bad_entity", "insight_id": "ins_002", "persona": "ops", "urgency": "daily",
+     "channel": "in_app", "entity_dim": "segment", "entity_value": "night_female_escort", "cooldown_hours": 24},
+    {"rule_id": "r_billing_leak", "insight_id": "ins_003", "persona": "strategic", "urgency": "weekly",
+     "channel": "email_digest", "entity_dim": "contract_type", "entity_value": "EV", "cooldown_hours": 168},
+    {"rule_id": "r_new_bad_entity", "insight_id": "ins_003", "persona": "ops", "urgency": "daily",
+     "channel": "in_app", "entity_dim": "contract_type", "entity_value": "EV", "cooldown_hours": 24},
+]
+
+
+@app.post("/internal/evaluate-alerts")
+def evaluate_alerts(payload: dict) -> dict:
+    insights = payload.get("insights") or []
+    present_ids = {insight.get("insight_id") for insight in insights}
+    ranked = sorted(
+        (i for i in INSIGHTS.values() if i["insight_id"] in present_ids),
+        key=lambda i: i["severity"],
+        reverse=True,
+    )
+    candidates = [c for c in ALERT_CANDIDATES if c["insight_id"] in present_ids]
+    return {"candidates": candidates, "ranked_insight_ids": [i["insight_id"] for i in ranked]}
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "UP", "service": "pulse-mock-agent", "version": "0.1.0"}

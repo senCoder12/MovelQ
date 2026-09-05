@@ -12,8 +12,10 @@ import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { filter } from 'rxjs';
 
+import { AlertsStateService } from '../core/alerts-state.service';
 import { formatCompact } from '../core/format';
 import { HealthService } from '../core/health.service';
+import { JobsService } from '../core/jobs.service';
 import { Period, ShellService } from '../core/shell.service';
 import { ThemeMode, ThemeService } from '../core/theme.service';
 import { TenantId, TenantService } from '../core/tenant.service';
@@ -49,16 +51,23 @@ export class AppShellComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly healthService = inject(HealthService);
+  private readonly jobsService = inject(JobsService);
 
   readonly shell = inject(ShellService);
   readonly tenants = inject(TenantService);
   readonly theme = inject(ThemeService);
+  readonly alertsState = inject(AlertsStateService);
 
   readonly navGroups = NAV_GROUPS;
   readonly agentUp = signal<boolean | null>(null);
+  readonly lastScanFailed = signal(false);
 
   /** Badge on the Brief nav item: how many signals are in the current feed. */
   readonly signalCount = computed(() => this.shell.insights().length);
+
+  /** Badge on the Brief nav item: how many alerts are still NEW -- number
+   * only, never shown at all when it is zero (no dot with nothing behind it). */
+  readonly alertCount = computed(() => this.alertsState.newCount());
 
   /** Worst confidence across the feed, colouring the Data health dot. */
   readonly healthTone = computed<'ok' | 'warn' | 'danger'>(() => {
@@ -81,6 +90,9 @@ export class AppShellComponent {
 
   /** The top bar's headline: how much is wrong, over how many trips. */
   readonly issueLine = computed(() => {
+    if (this.lastScanFailed()) {
+      return null;
+    }
     const insights = this.shell.insights();
     if (insights.length === 0) {
       return null;
@@ -100,13 +112,15 @@ export class AppShellComponent {
       )
       .subscribe(() => this.shell.viewTitle.set(this.resolveViewTitle()));
 
-    // Health follows the same reload path as everything else: a tenant switch
-    // or a refresh click re-reads it.
+    // Health, alerts and job status all follow the same reload path as
+    // everything else: a tenant switch or a refresh click re-reads them.
     effect(
       () => {
         this.tenants.tenantId();
         this.shell.refreshTick();
         this.loadHealth();
+        this.alertsState.refresh();
+        this.loadJobStatus();
       },
       { allowSignalWrites: true },
     );
@@ -153,6 +167,13 @@ export class AppShellComponent {
     this.healthService.getHealth().subscribe({
       next: (health) => this.agentUp.set(health.agent?.status === 'UP'),
       error: () => this.agentUp.set(false),
+    });
+  }
+
+  private loadJobStatus(): void {
+    this.jobsService.getStatus().subscribe({
+      next: (runs) => this.lastScanFailed.set(runs[0]?.status === 'FAILED' || runs[0]?.status === 'PARTIAL'),
+      error: () => this.lastScanFailed.set(false),
     });
   }
 

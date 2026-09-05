@@ -9,6 +9,16 @@
       </span>
       <span class="card__dot">&middot;</span>
       <span class="card__window pulse-mono">{{ window() }}</span>
+      @if (alertChip(); as chip) {
+        <button
+          type="button"
+          class="card__alert-chip pulse-mono"
+          [class.card__alert-chip--pending]="chip.isRepeatPending"
+          (click)="openAlert(chip.alertId)"
+        >
+          {{ chip.label }}
+        </button>
+      }
     </header>
 
     <div class="card__lede">

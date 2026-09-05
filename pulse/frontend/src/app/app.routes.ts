@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { ActionsAuditPageComponent } from './features/actions/audit/actions-audit-page.component';
+import { AlertsPageComponent } from './features/alerts/alerts-page.component';
 import { AuditPageComponent } from './features/audit/audit-page.component';
 import { DispatchHistoryPageComponent } from './features/reports/history/dispatch-history-page.component';
 import { BriefPageComponent } from './features/brief/brief-page.component';
@@ -32,6 +33,7 @@ export const routes: Routes = [
     data: { viewTitle: 'Data quality' },
   },
   { path: 'vendors', component: VendorsPageComponent, data: { viewTitle: 'Fleet vendors' } },
+  { path: 'alerts', component: AlertsPageComponent, data: { viewTitle: 'Alerts' } },
   { path: 'audit', component: AuditPageComponent, data: { viewTitle: 'Audit trail' } },
   {
     path: 'actions/audit',

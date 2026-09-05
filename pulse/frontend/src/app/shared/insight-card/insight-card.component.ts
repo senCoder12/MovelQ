@@ -1,4 +1,5 @@
 import { Component, ElementRef, computed, inject, input, output } from '@angular/core';
+import { Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
 import {
@@ -8,6 +9,8 @@ import {
   decidedButtonLabel,
 } from '../../core/actions.model';
 import { ActionsStateService } from '../../core/actions-state.service';
+import { AlertsStateService } from '../../core/alerts-state.service';
+import { formatAlertTime } from '../../core/alerts.model';
 import { InsightPacket } from '../../core/insight.model';
 import {
   domainTag,
@@ -24,6 +27,14 @@ interface ActionButton {
   label: string;
   decidedLabel: string | null;
   rejected: boolean;
+}
+
+interface AlertChip {
+  alertId: string;
+  label: string;
+  /** A repeat still awaiting acknowledgement reads muted -- see the spec's
+   * "re-raised, unacknowledged 24h" wording. */
+  isRepeatPending: boolean;
 }
 
 /**
@@ -46,7 +57,9 @@ interface ActionButton {
 })
 export class InsightCardComponent {
   private readonly element = inject(ElementRef<HTMLElement>);
+  private readonly router = inject(Router);
   private readonly actionsState = inject(ActionsStateService);
+  private readonly alertsState = inject(AlertsStateService);
 
   readonly insight = input.required<InsightPacket>();
 
@@ -85,12 +98,34 @@ export class InsightCardComponent {
     });
   });
 
+  /** The card's "alerted HH:mm" chip -- null when this insight has never
+   * fired an alert, so the card renders with no chip at all rather than a
+   * hollow placeholder. */
+  readonly alertChip = computed<AlertChip | null>(() => {
+    const alert = this.alertsState.latestForInsight(this.insight().insight_id);
+    if (!alert) {
+      return null;
+    }
+    const isRepeatPending = alert.repeat_of !== null && alert.status === 'NEW';
+    return {
+      alertId: alert.alert_id,
+      label: isRepeatPending
+        ? 're-raised, unacknowledged 24h'
+        : `alerted ${formatAlertTime(alert.fired_at)}`,
+      isRepeatPending,
+    };
+  });
+
   isPending(type: ActionType): boolean {
     return this.pendingActionKey() === `${this.insight().insight_id}::${type}`;
   }
 
   requestTrace(): void {
     this.showMath.emit(this.insight().insight_id);
+  }
+
+  openAlert(alertId: string): void {
+    this.router.navigateByUrl(`/alerts?open=${alertId}`);
   }
 
   requestDraft(type: ActionType): void {

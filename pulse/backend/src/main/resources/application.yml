@@ -89,6 +89,10 @@ pulse:
     # SmtpTransport refuses to address mail to anything outside this list,
     # regardless of what the recipient roster says -- see SmtpTransport.
     allowlist-domains: example.com
+  jobs:
+    # Runs one scan per known tenant at startup -- see ScanStartupRunner.
+    # Off in tests (src/test/resources/application.yml).
+    startup-scan-enabled: true
 
 logging:
   level:

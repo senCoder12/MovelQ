@@ -14,6 +14,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Reports', path: '/reports/leadership', icon: 'file-text' },
   { label: 'Data quality', path: '/data-quality', icon: 'safety-certificate' },
   { label: 'Fleet vendors', path: '/vendors', icon: 'bank', section: 'Management' },
+  { label: 'Alerts', path: '/alerts', icon: 'alert', section: 'Management' },
   { label: 'Audit trail', path: '/audit', icon: 'clock-circle', section: 'Management' },
   { label: 'Action approvals', path: '/actions/audit', icon: 'send', section: 'Management' },
   { label: 'Dispatch history', path: '/reports/history', icon: 'history', section: 'Management' },

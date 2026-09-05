@@ -8,6 +8,8 @@ import com.moveinsync.pulse.action.dto.AgentActionDraftRequest;
 import com.moveinsync.pulse.action.dto.AgentActionDraftResponse;
 import com.moveinsync.pulse.agent.dto.InsightPacket;
 import com.moveinsync.pulse.agent.dto.TraceResponse;
+import com.moveinsync.pulse.alert.dto.EvaluateAlertsRequest;
+import com.moveinsync.pulse.alert.dto.EvaluateAlertsResponse;
 import com.moveinsync.pulse.report.LeadershipNarrativeRequest;
 import com.moveinsync.pulse.report.LeadershipNarrativeResponse;
 
@@ -97,6 +99,16 @@ public class InsightAgentClient {
                     .retrieve()
                     .body(AgentActionDraftResponse.class);
         }
+    }
+
+    /** No LLM call happens on the agent side of this -- alert_router.py is
+     * pure rule matching over insights already computed. */
+    public EvaluateAlertsResponse evaluateAlerts(EvaluateAlertsRequest request) {
+        return withRetry(() -> restClient.post()
+                .uri("/internal/evaluate-alerts")
+                .body(request)
+                .retrieve()
+                .body(EvaluateAlertsResponse.class));
     }
 
     /** Retries a call exactly once on any non-404 RestClientException (timeout, connection

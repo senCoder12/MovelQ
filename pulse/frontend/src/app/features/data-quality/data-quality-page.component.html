@@ -49,6 +49,29 @@
     </article>
   </section>
 
+  <!-- Job health, minimal: not operational paging, just "did the last scan
+       run, and what did it do". -->
+  @if (lastScanRun(); as run) {
+    <section class="job-status" [class.job-status--warn]="run.status !== 'SUCCESS'" aria-label="Last scan run">
+      <span
+        class="job-status__dot"
+        [class.job-status__dot--warn]="run.status !== 'SUCCESS'"
+      ></span>
+      <span class="job-status__line">
+        Last scan <span class="pulse-mono">{{ run.started_at | date: 'd MMM, HH:mm' }}</span>
+        @if (run.duration_ms !== null) {
+          &middot; {{ run.duration_ms }}ms
+        }
+        &middot; <strong>{{ run.status }}</strong>
+        &middot; {{ run.insight_count }} insights, {{ run.alerts_fired }} alerts fired,
+        {{ run.alerts_suppressed }} suppressed, {{ run.alerts_repeated }} re-raised
+        @if (run.error_summary) {
+          &middot; {{ run.error_summary }}
+        }
+      </span>
+    </section>
+  }
+
   <div class="toolbar">
     <label class="search">
       <span nz-icon nzType="search" class="search__icon"></span>

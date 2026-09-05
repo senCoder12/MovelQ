@@ -28,6 +28,11 @@
               @if (item.path === '/brief' && signalCount() > 0) {
                 <span class="rail__badge pulse-mono">{{ signalCount() }}</span>
               }
+              @if (item.path === '/brief' && alertCount() > 0) {
+                <span class="rail__badge rail__badge--alert pulse-mono" title="Alerts awaiting acknowledgement">
+                  {{ alertCount() }}
+                </span>
+              }
               @if (item.path === '/data-quality') {
                 <span class="rail__dot" [class]="'rail__dot--' + healthTone()"></span>
               }
@@ -90,6 +95,11 @@
           <span class="issue" [class]="'issue--' + status.tone">
             <span class="issue__dot"></span>
             {{ status.label }}
+          </span>
+        } @else if (lastScanFailed()) {
+          <span class="issue issue--muted">
+            <span class="issue__dot"></span>
+            Last scan did not complete cleanly &middot; figures below may be stale
           </span>
         } @else {
           @if (shell.agentError(); as error) {

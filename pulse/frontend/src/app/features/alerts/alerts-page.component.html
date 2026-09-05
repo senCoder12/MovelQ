@@ -1,0 +1,124 @@
+<div class="alerts-page">
+  <div class="alerts-page__filters" role="group" aria-label="Filter by status">
+    @for (option of statusOptions; track option) {
+      <button
+        type="button"
+        class="alerts-page__filter"
+        [class.alerts-page__filter--active]="option === statusFilter()"
+        (click)="selectStatus(option)"
+      >
+        {{ option === 'all' ? 'All' : option }}
+      </button>
+    }
+  </div>
+
+  @if (error(); as message) {
+    <p class="status status--error">{{ message }}</p>
+  } @else if (alerts().length === 0 && !loading()) {
+    <p class="status">No alerts fired for this tenant yet.</p>
+  } @else {
+    <nz-table #table [nzData]="alerts()" [nzLoading]="loading()" [nzPageSize]="20" nzSize="small">
+      <thead>
+        <tr>
+          <th nzWidth="28px"></th>
+          <th>Status</th>
+          <th>Rule</th>
+          <th>Insight</th>
+          <th>Entity</th>
+          <th>Urgency</th>
+          <th>Fired</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (alert of table.data; track alert.alert_id) {
+          <tr>
+            <td
+              [nzShowExpand]="true"
+              [nzExpand]="isExpanded(alert.alert_id)"
+              (nzExpandChange)="toggleExpand(alert.alert_id)"
+            ></td>
+            <td>
+              <span class="verdict" [class]="'verdict verdict--' + alert.status.toLowerCase()">
+                {{ alert.status }}
+              </span>
+              @if (isRepeatPending(alert)) {
+                <span class="repeat-chip">re-raised, unacknowledged 24h</span>
+              }
+            </td>
+            <td class="pulse-mono">{{ alert.rule_id }}</td>
+            <td class="pulse-mono">{{ alert.insight_id }}</td>
+            <td class="pulse-mono">{{ alert.entity_dim }}={{ alert.entity_value }}</td>
+            <td>{{ alert.urgency }}</td>
+            <td class="pulse-mono">{{ alert.fired_at | date: 'short' }}</td>
+            <td class="alerts-page__row-actions">
+              @if (alert.status === 'NEW') {
+                <button type="button" class="alerts-page__action" (click)="acknowledge(alert)">Acknowledge</button>
+                <button type="button" class="alerts-page__action" (click)="startMute(alert.alert_id)">Mute</button>
+              }
+            </td>
+          </tr>
+          @if (isExpanded(alert.alert_id)) {
+            <tr [nzExpand]="true">
+              <td colspan="8">
+                <div class="detail">
+                  @if (deliveryFor(alert.alert_id); as delivery) {
+                    <p class="detail__subject">{{ delivery.rendered_subject }}</p>
+                    <pre class="detail__body">{{ delivery.rendered_body }}</pre>
+                    <p class="detail__label">Would send to</p>
+                    <ul class="detail__recipients">
+                      @for (recipient of delivery.would_send_to; track recipient.email) {
+                        <li>{{ recipient.name }} <span class="pulse-mono">&lt;{{ recipient.email }}&gt;</span></li>
+                      }
+                    </ul>
+                    <p class="detail__status pulse-mono">delivery_status {{ delivery.delivery_status }}</p>
+                  } @else if (isDeliveryLoading(alert.alert_id)) {
+                    <p class="status">Loading delivery&hellip;</p>
+                  }
+
+                  @if (alert.status === 'ACKNOWLEDGED' && alert.acknowledged_note) {
+                    <p class="detail__note"><strong>Note:</strong> {{ alert.acknowledged_note }}</p>
+                  }
+
+                  @if (mutingAlertId() === alert.alert_id) {
+                    <div class="mute-form">
+                      <textarea
+                        class="mute-form__reason"
+                        rows="2"
+                        placeholder="Reason for muting (required)"
+                        [ngModel]="muteReason()"
+                        (ngModelChange)="muteReason.set($event)"
+                      ></textarea>
+                      <label class="mute-form__days">
+                        Suppress for
+                        <input
+                          type="number"
+                          min="1"
+                          class="mute-form__days-input"
+                          [ngModel]="muteDays()"
+                          (ngModelChange)="muteDays.set($event)"
+                        />
+                        days
+                      </label>
+                      <div class="mute-form__buttons">
+                        <button type="button" class="alerts-page__action" (click)="cancelMute()">Cancel</button>
+                        <button
+                          type="button"
+                          class="alerts-page__action alerts-page__action--primary"
+                          [disabled]="!muteReason().trim()"
+                          (click)="confirmMute(alert)"
+                        >
+                          Confirm mute
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </nz-table>
+  }
+</div>

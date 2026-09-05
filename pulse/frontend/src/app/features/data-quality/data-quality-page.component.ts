@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -7,6 +8,8 @@ import { BriefService } from '../../core/brief.service';
 import { formatCompactInr, formatCount, formatPct } from '../../core/format';
 import { Confidence, DataQualityEntry, InsightPacket } from '../../core/insight.model';
 import { severityLabel, shapeOf } from '../../core/insight-presentation';
+import { JobsService } from '../../core/jobs.service';
+import { ScanRunView } from '../../core/jobs.model';
 import { ShellService } from '../../core/shell.service';
 import { TenantService } from '../../core/tenant.service';
 
@@ -60,12 +63,13 @@ const MONTHS = [
 @Component({
   selector: 'app-data-quality-page',
   standalone: true,
-  imports: [NzIconModule],
+  imports: [NzIconModule, DatePipe],
   templateUrl: './data-quality-page.component.html',
   styleUrl: './data-quality-page.component.css',
 })
 export class DataQualityPageComponent {
   private readonly briefService = inject(BriefService);
+  private readonly jobsService = inject(JobsService);
   private readonly router = inject(Router);
   private readonly shell = inject(ShellService);
   private readonly tenants = inject(TenantService);
@@ -74,6 +78,11 @@ export class DataQualityPageComponent {
   readonly entries = signal<DataQualityEntry[]>([]);
   readonly error = signal<string | null>(null);
   readonly loading = signal(false);
+
+  /** Most recent scan_run, or null while it's loading / if none has ever
+   * run. Not fatal if this fails to load -- the rest of the page still
+   * works, it just shows no "last run" line. */
+  readonly lastScanRun = signal<ScanRunView | null>(null);
 
   readonly query = signal('');
   readonly filter = signal<Filter>('all');
@@ -288,10 +297,12 @@ export class DataQualityPageComponent {
     forkJoin({
       brief: this.briefService.getBrief('ops'),
       quality: this.briefService.getDataQuality().pipe(catchError(() => of({ entries: [] }))),
+      jobs: this.jobsService.getStatus().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ brief, quality }) => {
+      next: ({ brief, quality, jobs }) => {
         this.insights.set(brief.insights);
         this.entries.set(quality.entries);
+        this.lastScanRun.set(jobs[0] ?? null);
         this.shell.insights.set(brief.insights);
         // Same feed as the brief, so the top bar keeps its agent status line
         // instead of reading idle while this view is open.
