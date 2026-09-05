@@ -1,231 +1,157 @@
 package com.moveinsync.pulse.action;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.moveinsync.pulse.insight.Insight;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
-/** What Pulse proposes a human should do about an insight. Never sent without a matching
- * {@link ApprovalLog} row -- the draft is a proposal, not an action. */
+/** One drafted action: recipient, subject/body and facts_cited/preview are
+ * stored as raw JSON text (recipient_json / facts_cited_json / preview_json)
+ * -- ActionDraftService is the only place that (de)serializes them, via the
+ * shared ObjectMapper, into the typed dto records the API returns. The row
+ * itself is never edited after creation except for `status`: an approval
+ * with an edited body is stored on ApprovalLog, never written back here --
+ * see the design note on that entity. */
 @Entity
 @Table(name = "action_draft")
-@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class ActionDraft {
 
-    /** Every value {@code status} is allowed to take; mirrors ck_action_draft_status in V2. */
-    public static final String STATUS_DRAFT = "draft";
-    public static final String STATUS_APPROVED = "approved";
-    public static final String STATUS_REJECTED = "rejected";
-    public static final String STATUS_SENT = "sent";
-    public static final String STATUS_FAILED = "failed";
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "tenant_id", nullable = false, updatable = false, insertable = false, length = 64)
-    private String tenantId;
-
     @Column(name = "action_id", nullable = false, updatable = false, length = 64)
     private String actionId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumns({
-            @JoinColumn(name = "insight_id", referencedColumnName = "insight_id", nullable = false),
-            @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", nullable = false)
-    })
-    private Insight insight;
+    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64)
+    private String tenantId;
 
-    @Column(name = "action_type", nullable = false, length = 32)
-    private String actionType;
+    @Column(name = "insight_id", nullable = false, updatable = false, length = 64)
+    private String insightId;
 
-    @Column(nullable = false, length = 512)
+    @Column(name = "type", nullable = false, updatable = false, length = 64)
+    private String type;
+
+    @Column(name = "title", nullable = false, updatable = false, length = 500)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(name = "recipient_json", nullable = false, updatable = false, columnDefinition = "text")
+    private String recipientJson;
+
+    @Column(name = "channel", nullable = false, updatable = false, length = 32)
+    private String channel;
+
+    @Column(name = "subject", nullable = false, updatable = false, length = 500)
+    private String subject;
+
+    @Column(name = "body", nullable = false, updatable = false, columnDefinition = "text")
     private String body;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(name = "facts_cited_json", nullable = false, updatable = false, columnDefinition = "text")
+    private String factsCitedJson;
+
+    @Column(name = "preview_json", nullable = false, updatable = false, columnDefinition = "text")
+    private String previewJson;
+
+    @Column(name = "rationale", updatable = false, columnDefinition = "text")
     private String rationale;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "recipient", nullable = false, columnDefinition = "jsonb")
-    private Map<String, Object> recipient = new LinkedHashMap<>();
+    @Column(name = "confidence", nullable = false, updatable = false, length = 16)
+    private String confidence;
 
-    /** Every number the draft quotes, tied back to the insight field it came from. This is
-     * what makes a draft auditable rather than merely generated. */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "facts_cited", nullable = false, columnDefinition = "jsonb")
-    private List<FactCitation> factsCited = new ArrayList<>();
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "preview", nullable = false, columnDefinition = "jsonb")
-    private Map<String, Object> preview = new LinkedHashMap<>();
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "params", nullable = false, columnDefinition = "jsonb")
-    private Map<String, Object> params = new LinkedHashMap<>();
-
-    @Column(nullable = false, length = 16)
-    private String status = STATUS_DRAFT;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 32)
+    private ActionStatus status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     protected ActionDraft() {
+        // JPA
     }
 
-    public ActionDraft(Insight insight, String actionId, String actionType, String title, String body, String rationale) {
-        this.insight = insight;
+    public ActionDraft(String actionId, String tenantId, String insightId, String type, String title,
+            String recipientJson, String channel, String subject, String body, String factsCitedJson,
+            String previewJson, String rationale, String confidence, ActionStatus status, Instant createdAt) {
         this.actionId = actionId;
-        this.actionType = actionType;
+        this.tenantId = tenantId;
+        this.insightId = insightId;
+        this.type = type;
         this.title = title;
+        this.recipientJson = recipientJson;
+        this.channel = channel;
+        this.subject = subject;
         this.body = body;
+        this.factsCitedJson = factsCitedJson;
+        this.previewJson = previewJson;
         this.rationale = rationale;
+        this.confidence = confidence;
+        this.status = status;
+        this.createdAt = createdAt;
     }
 
-    /** One quoted number and where it came from. */
-    public record FactCitation(String field, String label, Object value, String unit) {
-    }
-
-    @PrePersist
-    void onInsert() {
-        Instant now = Instant.now();
-        createdAt = createdAt == null ? now : createdAt;
-        updatedAt = now;
-        // The association owns the tenant_id column, so the mirror field would otherwise
-        // stay null on a freshly persisted instance until it is reloaded in a new session.
-        syncTenantId();
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = Instant.now();
-        syncTenantId();
-    }
-
-    private void syncTenantId() {
-        if (tenantId == null && insight != null) {
-            tenantId = insight.getTenantId();
-        }
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public String getActionId() {
+    public String actionId() {
         return actionId;
     }
 
-    public Insight getInsight() {
-        return insight;
+    public String tenantId() {
+        return tenantId;
     }
 
-    public String getActionType() {
-        return actionType;
+    public String insightId() {
+        return insightId;
     }
 
-    public void setActionType(String actionType) {
-        this.actionType = actionType;
+    public String type() {
+        return type;
     }
 
-    public String getTitle() {
+    public String title() {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public String recipientJson() {
+        return recipientJson;
     }
 
-    public String getBody() {
+    public String channel() {
+        return channel;
+    }
+
+    public String subject() {
+        return subject;
+    }
+
+    public String body() {
         return body;
     }
 
-    public void setBody(String body) {
-        this.body = body;
+    public String factsCitedJson() {
+        return factsCitedJson;
     }
 
-    public String getRationale() {
+    public String previewJson() {
+        return previewJson;
+    }
+
+    public String rationale() {
         return rationale;
     }
 
-    public void setRationale(String rationale) {
-        this.rationale = rationale;
+    public String confidence() {
+        return confidence;
     }
 
-    public Map<String, Object> getRecipient() {
-        return recipient;
-    }
-
-    public void setRecipient(Map<String, Object> recipient) {
-        this.recipient = recipient == null ? new LinkedHashMap<>() : recipient;
-    }
-
-    public List<FactCitation> getFactsCited() {
-        return factsCited;
-    }
-
-    public void setFactsCited(List<FactCitation> factsCited) {
-        this.factsCited = factsCited == null ? new ArrayList<>() : factsCited;
-    }
-
-    public Map<String, Object> getPreview() {
-        return preview;
-    }
-
-    public void setPreview(Map<String, Object> preview) {
-        this.preview = preview == null ? new LinkedHashMap<>() : preview;
-    }
-
-    public Map<String, Object> getParams() {
-        return params;
-    }
-
-    public void setParams(Map<String, Object> params) {
-        this.params = params == null ? new LinkedHashMap<>() : params;
-    }
-
-    public String getStatus() {
+    public ActionStatus status() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ActionStatus status) {
         this.status = status;
     }
 
-    public Instant getCreatedAt() {
+    public Instant createdAt() {
         return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
     }
 }

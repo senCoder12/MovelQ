@@ -47,17 +47,26 @@
     <span class="card__stat-label">{{ exposure().label }}</span>
     <span class="card__stat-value pulse-mono">{{ exposure().value }}</span>
 
-    @if (primaryAction(); as action) {
-      <button
-        type="button"
-        class="card__cta"
-        nz-tooltip
-        [nzTooltipTitle]="actionDetail(action)"
-        (click)="clickAction(action)"
-      >
-        <span class="card__cta-label">Investigate</span>
-        <span nz-icon nzType="right" class="card__cta-arrow"></span>
-      </button>
+    @for (button of actionButtons(); track button.type) {
+      @if (button.decidedLabel) {
+        <span
+          class="card__cta card__cta--decided"
+          [class.card__cta--rejected]="button.rejected"
+        >
+          <span nz-icon [nzType]="button.rejected ? 'close' : 'check'" class="card__cta-arrow"></span>
+          <span class="card__cta-label">{{ button.decidedLabel }}</span>
+        </span>
+      } @else {
+        <button
+          type="button"
+          class="card__cta"
+          [disabled]="isPending(button.type)"
+          (click)="requestDraft(button.type)"
+        >
+          <span class="card__cta-label">{{ isPending(button.type) ? 'Drafting…' : button.label }}</span>
+          <span nz-icon nzType="right" class="card__cta-arrow"></span>
+        </button>
+      }
     }
 
     <button type="button" class="card__secondary" (click)="requestTrace()">View audit logs</button>

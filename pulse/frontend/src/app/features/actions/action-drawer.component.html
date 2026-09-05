@@ -1,0 +1,123 @@
+<nz-drawer
+  [nzVisible]="visible()"
+  nzTitle="Review action"
+  [nzWidth]="520"
+  [nzClosable]="true"
+  (nzOnClose)="close()"
+>
+  <ng-container *nzDrawerContent>
+    @if (draft(); as draft) {
+      <div class="action-drawer">
+        <header class="action-drawer__head">
+          <span class="action-drawer__type pulse-mono">{{ typeLabel() }}</span>
+          <span class="action-drawer__confidence" [class]="'action-drawer__confidence--' + draft.confidence">
+            {{ draft.confidence }} confidence
+          </span>
+        </header>
+
+        <h3 class="action-drawer__title">{{ draft.title }}</h3>
+
+        <p class="action-drawer__recipient">
+          <span class="action-drawer__recipient-role">{{ draft.recipient.role }}</span>
+          <span class="action-drawer__dot">&middot;</span>
+          <span class="action-drawer__recipient-name">{{ draft.recipient.name }}</span>
+        </p>
+
+        <p class="action-drawer__rationale">Proposed because {{ draft.rationale }}</p>
+
+        <div class="action-drawer__field">
+          <label class="action-drawer__label" for="action-subject">Subject</label>
+          <input
+            id="action-subject"
+            type="text"
+            class="action-drawer__input"
+            [ngModel]="subject()"
+            (ngModelChange)="subject.set($event)"
+          />
+        </div>
+
+        <div class="action-drawer__field">
+          <label class="action-drawer__label" for="action-body">Body</label>
+          <textarea
+            id="action-body"
+            class="action-drawer__textarea"
+            rows="12"
+            [ngModel]="body()"
+            (ngModelChange)="body.set($event)"
+          ></textarea>
+        </div>
+
+        <div class="action-drawer__field">
+          <h4 class="action-drawer__label">Facts cited</h4>
+          <table class="action-drawer__facts">
+            <colgroup>
+              <col style="width: 42%" />
+              <col style="width: 28%" />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Label</th>
+                <th scope="col">Value</th>
+                <th scope="col">Source field</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (fact of draft.facts_cited; track fact.label + fact.source_field) {
+                <tr>
+                  <td>{{ fact.label }}</td>
+                  <td class="pulse-mono">{{ fact.value }}</td>
+                  <td class="pulse-mono action-drawer__facts-source">{{ fact.source_field }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="action-drawer__preview">
+          <span nz-icon nzType="history" class="action-drawer__preview-icon"></span>
+          <span>
+            <strong>What changes:</strong> {{ draft.preview.what_changes }}
+            @if (draft.preview.reversible) {
+              <span class="action-drawer__reversible">Reversible</span>
+            }
+          </span>
+        </div>
+
+        <footer class="action-drawer__footer">
+          @if (rejecting()) {
+            <div class="action-drawer__reject">
+              <textarea
+                class="action-drawer__reject-reason"
+                rows="2"
+                placeholder="Reason for rejecting (required)"
+                [ngModel]="reason()"
+                (ngModelChange)="reason.set($event)"
+              ></textarea>
+              <div class="action-drawer__reject-buttons">
+                <button type="button" class="action-drawer__btn action-drawer__btn--ghost" (click)="cancelReject()">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  class="action-drawer__btn action-drawer__btn--danger"
+                  [disabled]="!reason().trim() || saving()"
+                  (click)="confirmReject()"
+                >
+                  Confirm reject
+                </button>
+              </div>
+            </div>
+          } @else {
+            <button type="button" class="action-drawer__btn action-drawer__btn--ghost" [disabled]="saving()" (click)="startReject()">
+              Reject
+            </button>
+            <button type="button" class="action-drawer__btn action-drawer__btn--primary" [disabled]="saving()" (click)="approve()">
+              {{ approveLabel() }}
+            </button>
+          }
+        </footer>
+      </div>
+    }
+  </ng-container>
+</nz-drawer>

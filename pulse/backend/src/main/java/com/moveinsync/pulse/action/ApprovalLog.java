@@ -4,108 +4,97 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Filter;
-
-/** Who decided what about an action draft, and when they decided it. Append-only. */
+/** One human decision on one ActionDraft. This is the system log the design
+ * calls for: nothing sends autonomously, and this row is the only durable
+ * effect an approval has. `editedSubject`/`editedBody` hold the human's edit
+ * when there was one -- the ActionDraft row is never overwritten, so this is
+ * the only place the diff between what the agent proposed and what was
+ * actually approved is recorded. */
 @Entity
 @Table(name = "approval_log")
-@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class ApprovalLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "log_id", nullable = false, updatable = false, length = 64)
+    private String logId;
 
-    @Column(name = "tenant_id", nullable = false, updatable = false, insertable = false, length = 64)
+    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64)
     private String tenantId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumns({
-            @JoinColumn(name = "action_draft_id", referencedColumnName = "id", nullable = false),
-            @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", nullable = false)
-    })
-    private ActionDraft actionDraft;
+    @Column(name = "action_id", nullable = false, updatable = false, length = 64)
+    private String actionId;
 
-    @Column(nullable = false, length = 16)
+    @Column(name = "decision", nullable = false, updatable = false, length = 32)
     private String decision;
 
-    @Column(nullable = false, length = 256)
-    private String actor;
+    @Column(name = "decided_by", nullable = false, updatable = false, length = 128)
+    private String decidedBy;
 
-    @Column(columnDefinition = "text")
-    private String note;
-
-    /** When the human decided, not when we got round to writing the row. */
-    @Column(name = "decided_at", nullable = false)
+    @Column(name = "decided_at", nullable = false, updatable = false)
     private Instant decidedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "edited_subject", updatable = false, length = 500)
+    private String editedSubject;
+
+    @Column(name = "edited_body", updatable = false, columnDefinition = "text")
+    private String editedBody;
+
+    @Column(name = "note", updatable = false, length = 2000)
+    private String note;
 
     protected ApprovalLog() {
+        // JPA
     }
 
-    public ApprovalLog(ActionDraft actionDraft, String decision, String actor, String note, Instant decidedAt) {
-        this.actionDraft = actionDraft;
+    public ApprovalLog(String logId, String tenantId, String actionId, String decision, String decidedBy,
+            Instant decidedAt, String editedSubject, String editedBody, String note) {
+        this.logId = logId;
+        this.tenantId = tenantId;
+        this.actionId = actionId;
         this.decision = decision;
-        this.actor = actor;
+        this.decidedBy = decidedBy;
+        this.decidedAt = decidedAt;
+        this.editedSubject = editedSubject;
+        this.editedBody = editedBody;
         this.note = note;
-        this.decidedAt = decidedAt == null ? Instant.now() : decidedAt;
     }
 
-    @PrePersist
-    void onInsert() {
-        Instant now = Instant.now();
-        createdAt = createdAt == null ? now : createdAt;
-        if (decidedAt == null) {
-            decidedAt = now;
-        }
-        // See ActionDraft.syncTenantId: the association writes the column, this keeps the
-        // in-memory mirror honest before the entity is reloaded.
-        if (tenantId == null && actionDraft != null) {
-            tenantId = actionDraft.getTenantId();
-        }
+    public String logId() {
+        return logId;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getTenantId() {
+    public String tenantId() {
         return tenantId;
     }
 
-    public ActionDraft getActionDraft() {
-        return actionDraft;
+    public String actionId() {
+        return actionId;
     }
 
-    public String getDecision() {
+    public String decision() {
         return decision;
     }
 
-    public String getActor() {
-        return actor;
+    public String decidedBy() {
+        return decidedBy;
     }
 
-    public String getNote() {
-        return note;
-    }
-
-    public Instant getDecidedAt() {
+    public Instant decidedAt() {
         return decidedAt;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
+    public String editedSubject() {
+        return editedSubject;
+    }
+
+    public String editedBody() {
+        return editedBody;
+    }
+
+    public String note() {
+        return note;
     }
 }

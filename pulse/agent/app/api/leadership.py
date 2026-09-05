@@ -26,6 +26,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from app.agent import validator
+from app.agent.json_llm import parse_json_object
 from app.llm import client as llm_client
 
 router = APIRouter(prefix="/internal", tags=["internal"])
@@ -43,23 +44,6 @@ def _cache_key(payload: dict[str, Any]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def _parse_json(text: str) -> dict[str, Any] | None:
-    """Strict JSON parse. Strips a markdown fence defensively even though
-    the prompt forbids one -- LLMs wrap output in ```json fences often
-    enough that failing outright would waste the one retry we get."""
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        stripped = stripped.strip("`")
-        if stripped.lower().startswith("json"):
-            stripped = stripped[4:]
-        stripped = stripped.strip()
-    try:
-        parsed = json.loads(stripped)
-    except json.JSONDecodeError:
-        return None
-    return parsed if isinstance(parsed, dict) else None
-
-
 def _call_llm(payload: dict[str, Any], feedback: str | None = None) -> dict[str, Any] | None:
     prompt = _prompt_template() + "\n\n## Input\n\n" + json.dumps(payload, indent=2)
     if feedback:
@@ -70,7 +54,7 @@ def _call_llm(payload: dict[str, Any], feedback: str | None = None) -> dict[str,
         # Any LLM-call failure (missing key, network, rate limit) degrades to
         # the template fallback rather than a 500 -- see module docstring.
         return None
-    return _parse_json(raw)
+    return parse_json_object(raw)
 
 
 def _fallback(payload: dict[str, Any]) -> dict[str, Any]:

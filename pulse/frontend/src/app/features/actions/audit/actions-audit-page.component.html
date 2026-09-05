@@ -1,0 +1,86 @@
+<div class="actions-audit">
+  <div class="actions-audit__filters" role="group" aria-label="Filter by status">
+    @for (option of statusOptions; track option) {
+      <button
+        type="button"
+        class="actions-audit__filter"
+        [class.actions-audit__filter--active]="option === statusFilter()"
+        (click)="selectStatus(option)"
+      >
+        {{ option === 'all' ? 'All' : option }}
+      </button>
+    }
+  </div>
+
+  @if (error(); as message) {
+    <p class="status status--error">{{ message }}</p>
+  } @else if (actions().length === 0 && !loading()) {
+    <p class="status">No actions drafted for this tenant yet.</p>
+  } @else {
+    <nz-table #table [nzData]="actions()" [nzLoading]="loading()" [nzPageSize]="20" nzSize="small">
+      <thead>
+        <tr>
+          <th nzWidth="28px"></th>
+          <th>Status</th>
+          <th>Type</th>
+          <th>Insight</th>
+          <th>Recipient</th>
+          <th>Drafted</th>
+          <th>Decided</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (action of table.data; track action.action_id) {
+          <tr>
+            <td
+              [nzShowExpand]="true"
+              [nzExpand]="expanded().has(action.action_id)"
+              (nzExpandChange)="toggleExpand(action.action_id)"
+            ></td>
+            <td>
+              <span class="verdict" [class]="'verdict verdict--' + action.status.toLowerCase()">{{ action.status }}</span>
+            </td>
+            <td>{{ typeLabel(action) }}</td>
+            <td class="pulse-mono">{{ action.insight_id }}</td>
+            <td>{{ action.recipient.name }}</td>
+            <td class="pulse-mono">{{ action.created_at | date: 'short' }}</td>
+            <td class="pulse-mono">
+              @if (action.decision) {
+                {{ action.decision.decided_at | date: 'short' }}
+              } @else {
+                &mdash;
+              }
+            </td>
+          </tr>
+          @if (expanded().has(action.action_id)) {
+            <tr [nzExpand]="true">
+              <td colspan="7">
+                <div class="detail">
+                  <div class="detail__block">
+                    <h4>Original draft</h4>
+                    <p class="detail__subject">{{ action.subject }}</p>
+                    <pre class="detail__body">{{ action.body }}</pre>
+                  </div>
+                  @if (action.decision && (action.decision.edited_subject || action.decision.edited_body)) {
+                    <div class="detail__block detail__block--edited">
+                      <h4>Human edit</h4>
+                      @if (action.decision.edited_subject) {
+                        <p class="detail__subject">{{ action.decision.edited_subject }}</p>
+                      }
+                      @if (action.decision.edited_body) {
+                        <pre class="detail__body">{{ action.decision.edited_body }}</pre>
+                      }
+                    </div>
+                  }
+                  @if (action.decision?.note) {
+                    <p class="detail__note"><strong>Note:</strong> {{ action.decision?.note }}</p>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </nz-table>
+  }
+</div>

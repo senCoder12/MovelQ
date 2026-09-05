@@ -96,21 +96,39 @@ class ValidationResult:
     ungrounded: set[float] = field(default_factory=set)
 
 
+def validate_text(grounded_source: Any, *texts: str) -> ValidationResult:
+    """Check every number across `texts` traces back to a number reachable
+    from `grounded_source`. The shared primitive behind both `validate`
+    (leadership-narrative JSON) and `validate_action` (an action draft's
+    subject + body) -- both are "some free text an LLM wrote against a
+    structured input" and the grounding rule is identical either way.
+    """
+    grounded = collect_input_numbers(grounded_source)
+    produced: set[float] = set()
+    for text in texts:
+        produced |= extract_numbers(text or "")
+    ungrounded = {n for n in produced if not _has_match(n, grounded)}
+    return ValidationResult(ok=not ungrounded, ungrounded=ungrounded)
+
+
 def validate(input_payload: Any, output: dict[str, Any]) -> ValidationResult:
     """Check every number in `output` (the parsed leadership-narrative JSON)
     traces back to a number in `input_payload` (the request Java sent).
     """
-    grounded = collect_input_numbers(input_payload)
-
-    produced: set[float] = set()
-    for field_name in _NARRATIVE_TEXT_FIELDS:
-        produced |= extract_numbers(str(output.get(field_name, "")))
+    texts = [str(output.get(field_name, "")) for field_name in _NARRATIVE_TEXT_FIELDS]
     for finding in output.get("findings", []) or []:
         for field_name in _FINDING_TEXT_FIELDS:
-            produced |= extract_numbers(str(finding.get(field_name, "")))
+            texts.append(str(finding.get(field_name, "")))
+    return validate_text(input_payload, *texts)
 
-    ungrounded = {n for n in produced if not _has_match(n, grounded)}
-    return ValidationResult(ok=not ungrounded, ungrounded=ungrounded)
+
+def validate_action(insight: dict[str, Any], subject: str, body: str) -> ValidationResult:
+    """Check every number in an action draft's subject + body traces back to
+    a number in the source InsightPacket. An action with an ungrounded figure
+    is a bug -- see agent/app/actions/drafters.py for the retry/fallback that
+    enforces this before a draft is ever returned.
+    """
+    return validate_text(insight, subject, body)
 
 
 def _has_match(value: float, grounded: set[float]) -> bool:

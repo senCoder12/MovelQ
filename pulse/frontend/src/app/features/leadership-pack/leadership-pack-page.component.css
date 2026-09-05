@@ -47,6 +47,27 @@
   cursor: not-allowed;
 }
 
+/* The dispatch chip: proof a send actually happened, not a second Send
+   button -- clicking it opens the history, it never re-opens the drawer. */
+.dispatch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pulse-space-1);
+  padding: var(--pulse-space-1) var(--pulse-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--pulse-radius-pill);
+  background: var(--pulse-ok-soft);
+  color: var(--pulse-ok-text);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dispatch-chip:hover {
+  filter: brightness(0.95);
+}
+
 .leadership-page__status {
   color: var(--pulse-text-muted);
   font-size: 0.875rem;

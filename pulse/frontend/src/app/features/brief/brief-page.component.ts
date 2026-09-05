@@ -1,13 +1,18 @@
 import { Component, HostListener, QueryList, ViewChildren, computed, effect, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 
+import { ActionDraft, ActionType } from '../../core/actions.model';
+import { ActionsService } from '../../core/actions.service';
+import { ActionsStateService } from '../../core/actions-state.service';
 import { BriefService } from '../../core/brief.service';
 import { Domain, shapeOf, summaryTiles } from '../../core/insight-presentation';
-import { InsightPacket, RecommendedAction } from '../../core/insight.model';
+import { InsightPacket } from '../../core/insight.model';
 import { ShellService } from '../../core/shell.service';
 import { TenantService } from '../../core/tenant.service';
+import { ActionDrawerComponent } from '../actions/action-drawer.component';
 import { InsightCardComponent } from '../../shared/insight-card/insight-card.component';
 import { TraceDrawerComponent } from '../trace/trace-drawer.component';
 
@@ -28,11 +33,13 @@ interface FilterTab {
 @Component({
   selector: 'app-brief-page',
   standalone: true,
-  imports: [NzSkeletonModule, NzIconModule, InsightCardComponent, TraceDrawerComponent],
+  imports: [NzSkeletonModule, NzIconModule, InsightCardComponent, TraceDrawerComponent, ActionDrawerComponent],
   templateUrl: './brief-page.component.html',
   styleUrl: './brief-page.component.css',
 })
 export class BriefPageComponent {
+  private readonly actionsService = inject(ActionsService);
+  private readonly actionsState = inject(ActionsStateService);
   private readonly briefService = inject(BriefService);
   private readonly notification = inject(NzNotificationService);
   private readonly shell = inject(ShellService);
@@ -49,6 +56,12 @@ export class BriefPageComponent {
 
   readonly drawerVisible = signal(false);
   readonly traceInsight = signal<InsightPacket | null>(null);
+
+  readonly actionDrawerVisible = signal(false);
+  readonly actionDraft = signal<ActionDraft | null>(null);
+  /** `${insight_id}::${type}` of the button awaiting a draft, so only that
+   * one card shows a pending state while the agent call is in flight. */
+  readonly pendingActionKey = signal<string | null>(null);
 
   readonly tiles = computed(() => summaryTiles(this.insights() ?? []));
 
@@ -174,8 +187,34 @@ export class BriefPageComponent {
     this.drawerVisible.set(false);
   }
 
-  onActionClicked(action: RecommendedAction): void {
-    this.notification.success(action.title, action.rationale);
+  onDraftRequested(insight: InsightPacket, type: ActionType): void {
+    const key = `${insight.insight_id}::${type}`;
+    if (this.pendingActionKey()) {
+      return;
+    }
+    this.pendingActionKey.set(key);
+    this.actionsService.draft(insight.insight_id, type).subscribe({
+      next: (draft) => {
+        this.pendingActionKey.set(null);
+        this.actionDraft.set(draft);
+        this.actionDrawerVisible.set(true);
+      },
+      error: (err) => {
+        this.pendingActionKey.set(null);
+        this.notification.error(
+          'Unable to draft action',
+          err?.error?.message ?? err?.message ?? 'The backend is unreachable.',
+        );
+      },
+    });
+  }
+
+  closeActionDrawer(): void {
+    this.actionDrawerVisible.set(false);
+  }
+
+  onActionDecided(draft: ActionDraft): void {
+    this.actionsState.record(draft);
   }
 
   private moveCursor(delta: number, count: number): void {
@@ -187,6 +226,22 @@ export class BriefPageComponent {
   private scrollToCursor(): void {
     // Wait for the class binding to land before asking the card to scroll.
     queueMicrotask(() => this.cards?.get(this.cursor())?.scrollIntoView());
+  }
+
+  /** Seeds ActionsStateService from every visible insight's action history,
+   * so a card already shows "... approved 14:32" right after a reload
+   * instead of only after a decision made in this session. */
+  private seedActionsState(insights: InsightPacket[]): void {
+    if (insights.length === 0) {
+      return;
+    }
+    forkJoin(insights.map((insight) => this.actionsService.listForInsight(insight.insight_id))).subscribe({
+      next: (perInsight) => this.actionsState.seed(perInsight.flat()),
+      error: () => {
+        // Button state degrades to "never drafted" for this load; the next
+        // decision (or the next reload) re-seeds it. Not worth a toast.
+      },
+    });
   }
 
   private load(): void {
@@ -205,6 +260,7 @@ export class BriefPageComponent {
         });
         this.loading.set(false);
         this.shell.loading.set(false);
+        this.seedActionsState(brief.insights);
       },
       error: (err) => {
         const message = err?.message ?? 'The backend is unreachable.';

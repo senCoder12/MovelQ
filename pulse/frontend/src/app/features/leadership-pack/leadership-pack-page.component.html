@@ -8,11 +8,17 @@
       }
     </span>
     <div class="leadership-page__actions">
+      @if (dispatchChipLabel(); as label) {
+        <button type="button" class="dispatch-chip" (click)="openHistory()">
+          <span nz-icon nzType="check"></span>
+          {{ label }}
+        </button>
+      }
       <button type="button" class="leadership-page__chrome-button" [disabled]="!pack()" (click)="copyAsText()">
         <span nz-icon nzType="copy"></span>
         Copy
       </button>
-      <button type="button" class="leadership-page__chrome-button" [disabled]="!pack()" (click)="send()">
+      <button type="button" class="leadership-page__chrome-button" [disabled]="!pack()" (click)="openSendDrawer()">
         <span nz-icon nzType="send"></span>
         Send
       </button>
@@ -65,3 +71,10 @@
     <p class="leadership-page__status">Loading leadership pack&hellip;</p>
   }
 </div>
+
+<app-send-report-drawer
+  [visible]="sendDrawerVisible()"
+  [period]="period()"
+  (closed)="closeSendDrawer()"
+  (dispatched)="onDispatched($event)"
+/>

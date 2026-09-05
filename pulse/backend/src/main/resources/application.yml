@@ -48,6 +48,18 @@ spring:
     # The Neon database also holds the warehouse loader's tables. Baseline at 0 so V1 still
     # runs; Flyway's default of 1 would skip it. See the same settings in pom.xml.
     baseline-version: 0
+  # Only consulted when pulse.dispatch.transport=smtp (spring-boot-starter-mail
+  # autoconfigures a JavaMailSender from these). Blank host/user/password are
+  # harmless while the transport is "logged" -- nothing here is read otherwise.
+  mail:
+    host: ${PULSE_SMTP_HOST:localhost}
+    port: ${PULSE_SMTP_PORT:1025}
+    username: ${PULSE_SMTP_USER:}
+    password: ${PULSE_SMTP_PASSWORD:}
+    properties:
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 pulse:
   agent:
@@ -68,6 +80,15 @@ pulse:
     # worth a line in the log.
     slow-query-ms: 500
     slow-request-ms: 800
+  dispatch:
+    # logged | smtp -- see report/dispatch/ReportTransport. Swapping this is
+    # a config change; nothing in code or in the API changes.
+    transport: ${PULSE_DISPATCH_TRANSPORT:logged}
+    from-address: ${PULSE_SMTP_FROM:pulse-reports@example.com}
+  smtp:
+    # SmtpTransport refuses to address mail to anything outside this list,
+    # regardless of what the recipient roster says -- see SmtpTransport.
+    allowlist-domains: example.com
 
 logging:
   level:

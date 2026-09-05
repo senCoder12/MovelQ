@@ -36,13 +36,18 @@ from app.ingest import quality
 
 REGISTRY_PATH = Path(__file__).with_name("registry.yaml")
 
+#: Fact tables do not agree on what to call their date. fact_trip and
+#: fact_trip_employee have trip_date; fact_trip_billing is keyed on a billing
+#: cycle and has cycle_start. A metric declares its own via date_column.
+DEFAULT_DATE_COLUMN = "trip_date"
+
 _SQL_TEMPLATE = """\
 SELECT {dim} AS dim_value,
-       date_trunc('{grain}', trip_date) AS period,
+       date_trunc('{grain}', {date_column}) AS period,
        {numerator}::double / NULLIF({denominator},0) AS value,
        {denominator} AS n
 FROM {table}
-WHERE tenant_id = ? AND trip_date BETWEEN ? AND ?
+WHERE tenant_id = ? AND {date_column} BETWEEN ? AND ?
   AND (dq_flags & {excluded_mask}) = 0
 GROUP BY 1,2
 """
@@ -99,8 +104,14 @@ def compile_sql(metric_id: str, dim: str, grain: str = "day") -> str:
         numerator=metric["numerator"],
         denominator=metric["denominator"],
         table=metric["table"],
+        date_column=date_column(metric),
         excluded_mask=excluded_mask,
     )
+
+
+def date_column(metric: dict[str, Any]) -> str:
+    """The date column a metric filters and groups on."""
+    return metric.get("date_column", DEFAULT_DATE_COLUMN)
 
 
 def run_metric(

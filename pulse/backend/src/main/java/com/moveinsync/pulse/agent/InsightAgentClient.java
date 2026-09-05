@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.moveinsync.pulse.action.dto.AgentActionDraftRequest;
+import com.moveinsync.pulse.action.dto.AgentActionDraftResponse;
 import com.moveinsync.pulse.agent.dto.InsightPacket;
 import com.moveinsync.pulse.agent.dto.TraceResponse;
 import com.moveinsync.pulse.report.LeadershipNarrativeRequest;
@@ -59,6 +61,29 @@ public class InsightAgentClient {
                 .body(request)
                 .retrieve()
                 .body(LeadershipNarrativeResponse.class));
+    }
+
+    /** A 400 (the agent rejecting an inapplicable action type) is not
+     * retried and propagates as-is -- ActionDraftService maps it to a 400
+     * for the caller instead of the generic BAD_GATEWAY other failures get. */
+    public AgentActionDraftResponse draftAction(InsightPacket insight, String type) {
+        AgentActionDraftRequest request = new AgentActionDraftRequest(insight, type);
+        try {
+            return restClient.post()
+                    .uri("/internal/draft-action")
+                    .body(request)
+                    .retrieve()
+                    .body(AgentActionDraftResponse.class);
+        } catch (HttpClientErrorException.BadRequest ex) {
+            throw ex;
+        } catch (RestClientException ex) {
+            log.warn("Agent call failed, retrying once: {}", ex.getMessage());
+            return restClient.post()
+                    .uri("/internal/draft-action")
+                    .body(request)
+                    .retrieve()
+                    .body(AgentActionDraftResponse.class);
+        }
     }
 
     /** Retries a call exactly once on any non-404 RestClientException (timeout, connection

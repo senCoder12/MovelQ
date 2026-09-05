@@ -27,6 +27,10 @@
 default_grain: day
 supported_grains: [day, week]
 
+# Metrics filter and group on trip_date unless they declare otherwise.
+# fact_trip_billing is keyed on the billing cycle and has no trip_date at all.
+default_date_column: trip_date
+
 metrics:
   # --- reconciliation metrics (the demo) ------------------------------
 
@@ -41,11 +45,18 @@ metrics:
     slice_by: [vendor_id, office, shift_bucket, shift_suffix, tenant_id, route_source]
     exclude_flags: [ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
     targets: {warn: 0.15, critical: 0.30}
+    # Optional, read by app/detect. Aggregates over the adverse rows only, so the
+    # figure means the same thing as impact.affected_trips.
+    impact:
+      late_minutes_total: >-
+        SUM(computed_arrival_delay_min) FILTER (WHERE computed_arrival_delay_min > 10
+          AND reported_delay_minutes = 0)
 
   - id: unbilled_km_rate
     name: Unbilled km rate
     unit: rate
     table: fact_trip_billing
+    date_column: cycle_start
     numerator: "COUNT(*) FILTER (WHERE billed_km = 0 AND traveled_km > 0)"
     denominator: "COUNT(*)"
     direction: lower_better
@@ -53,11 +64,21 @@ metrics:
     slice_by: [vendor, office, tenant_id, contract]
     exclude_flags: [NEGATIVE_COST, FUEL_CONTRACT_MISMATCH, SLAB_MISSING]
     targets: {warn: 0.10, critical: 0.25}
+    # billed_km is unpopulated for some tenants in this export -- vanta has it zero on
+    # 82,761 of 85,036 rows. Measured naively that reads as "97.8% unbilled, INR 101M
+    # exposed", which is a missing column, not a billing leak. Below this threshold the
+    # metric is reporting source completeness and detection skips it.
+    requires_populated:
+      column: billed_km
+      min_populated_pct: 10
+    impact:
+      cost_inr_month: "SUM(trip_cost) FILTER (WHERE billed_km = 0 AND traveled_km > 0)"
 
   - id: ev_contract_mismatch_rate
     name: EV contract / fuel mismatch rate
     unit: rate
     table: fact_trip_billing
+    date_column: cycle_start
     numerator: >-
       COUNT(*) FILTER (WHERE contract ILIKE '%EV%'
         AND NOT (actual_cab_fuel_type ILIKE '%ELEC%' OR actual_cab_fuel_type ILIKE '%EV%'))
@@ -65,8 +86,19 @@ metrics:
     direction: lower_better
     min_sample: 30
     slice_by: [vendor, office, tenant_id]
-    exclude_flags: [BILLED_KM_ZERO, NEGATIVE_COST, SLAB_MISSING]
+    # Empty on purpose. This metric reads contract and actual_cab_fuel_type; every
+    # billing-amount flag is about a different column and excluding on them destroys
+    # the measurement -- BILLED_KM_ZERO alone removes 18,442 of vanta's 20,098
+    # EV-contract rows, and NEGATIVE_COST/SLAB_MISSING remove all 1,229 of pinnacle's,
+    # which is why this metric silently reported nothing for either tenant. There is no
+    # flag that says the contract or fuel-type field is untrustworthy, so there is
+    # nothing legitimate to exclude.
+    exclude_flags: []
     targets: {warn: 0.02, critical: 0.10}
+    impact:
+      cost_inr_month: >-
+        SUM(trip_cost) FILTER (WHERE contract ILIKE '%EV%'
+          AND NOT (actual_cab_fuel_type ILIKE '%ELEC%' OR actual_cab_fuel_type ILIKE '%EV%'))
 
   - id: escort_coverage_night_female
     name: Escort coverage, night shifts, female employees
@@ -79,7 +111,14 @@ metrics:
     direction: higher_better
     min_sample: 100
     slice_by: [tenant_id, office, site_code, emp_role]
-    exclude_flags: [DELAY_UNREPORTED, ROSTER_OVERCOUNT, NO_BILL_MATCH, IMPLAUSIBLE_DURATION]
+    # Deliberately narrower than the blanket rule above. DELAY_UNREPORTED and
+    # ROSTER_OVERCOUNT say nothing about whether an escort was present, and on this
+    # dataset they are almost perfectly correlated with escorted legs: excluding them
+    # drops catalyst from 25,363 night-female legs to 3,753 and reported coverage from
+    # 74.7% to 3.1%. Excluding a flag that is confounded with the outcome does not clean
+    # the measurement, it inverts it. Only flags that make the underlying leg record
+    # untrustworthy belong here.
+    exclude_flags: [IMPLAUSIBLE_DURATION]
     targets: {warn: 0.85, critical: 0.65}
     note: >-
       Named "coverage", not "compliance" -- there is no policy document
@@ -131,6 +170,7 @@ metrics:
     name: Cost per employee-trip
     unit: currency_per_employee
     table: fact_trip_billing
+    date_column: cycle_start
     numerator: "SUM(trip_cost)"
     denominator: "SUM(actual_employee_cnt)"
     direction: lower_better

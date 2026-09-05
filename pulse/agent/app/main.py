@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.api import leadership
+from app.api import actions, insights, leadership
 from app.config import get_settings
 
 settings = get_settings()
@@ -13,6 +13,8 @@ settings = get_settings()
 app = FastAPI(title=settings.app_name, version=settings.version)
 
 app.include_router(leadership.router)
+app.include_router(actions.router)
+app.include_router(insights.router)
 
 
 class Health(BaseModel):
