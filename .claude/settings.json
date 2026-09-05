@@ -68,7 +68,10 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['stats']['active_situations']\\)\")",
       "Bash(grep -n \"Reloading\\\\|Started server process\" /private/tmp/movelq-backend.log | tail -10 *)",
       "Bash(git fetch *)",
-      "Bash(grep -E \"^\\\\?\\\\?|node_modules|\\\\.venv|data/raw|backend/\\\\.env$\")"
+      "Bash(grep -E \"^\\\\?\\\\?|node_modules|\\\\.venv|data/raw|backend/\\\\.env$\")",
+      "Bash(git merge *)",
+      "Bash(grep -rn *)",
+      "Bash(git commit *)"
     ]
   }
 }

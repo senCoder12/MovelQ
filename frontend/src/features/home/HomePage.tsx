@@ -5,10 +5,15 @@ import { api } from '../../services/api';
 import SituationCard from '../../components/SituationCard';
 import ReadinessGauge from '../../components/ReadinessGauge';
 import SimulateAlertModal from '../../components/SimulateAlertModal';
+import ReadinessByBusinessUnitChart from '../../components/ReadinessByBusinessUnitChart';
+import SituationsByPriorityChart from '../../components/SituationsByPriorityChart';
+import AtRiskShiftsList from '../../components/AtRiskShiftsList';
+import { SituationPriority } from '../../types';
 
 export default function HomePage() {
   const { data, loading, error } = useFetch(() => api.getHome(), [], 5000);
   const [showSimulate, setShowSimulate] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState<SituationPriority | null>(null);
 
   if (loading) return <div className="p-8 text-gray-500">Loading Command Center...</div>;
   if (error) return <div className="p-8 text-red-500">Error loading dashboard data.</div>;
@@ -17,6 +22,10 @@ export default function HomePage() {
   const overallScore = data.stats.overall_readiness <= 1.0
     ? Math.round(data.stats.overall_readiness * 1000) / 10
     : Math.round(data.stats.overall_readiness * 10) / 10;
+
+  const visibleSituations = priorityFilter
+    ? data.active_situations.filter(s => s.priority === priorityFilter)
+    : data.active_situations;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -64,55 +73,45 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-8">
-        <div className="col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-gray-900">Situations Requiring Attention</h3>
+      <div className="grid grid-cols-2 gap-6">
+        <ReadinessByBusinessUnitChart data={data.readiness_summary} />
+        <SituationsByPriorityChart
+          situations={data.active_situations}
+          selected={priorityFilter}
+          onSelect={setPriorityFilter}
+        />
+      </div>
+
+      <AtRiskShiftsList data={data.readiness_summary} />
+
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-gray-900">Situations Requiring Attention</h3>
+          <div className="flex items-center gap-3">
+            {priorityFilter && (
+              <button
+                onClick={() => setPriorityFilter(null)}
+                className="text-xs font-medium text-blue-600 hover:text-blue-800"
+              >
+                Clear "{priorityFilter}" filter
+              </button>
+            )}
             <span className="text-sm font-medium text-gray-500">
-              {data.active_situations.length} active {data.active_situations.length === 1 ? 'situation' : 'situations'}
+              {visibleSituations.length} {visibleSituations.length === 1 ? 'situation' : 'situations'}
             </span>
           </div>
-          <div className="space-y-4">
-            {data.active_situations.map(sit => (
-              <SituationCard key={sit.situation_id} situation={sit} />
-            ))}
-            {data.active_situations.length === 0 && (
-              <div className="p-8 text-center text-gray-500 bg-white rounded-lg border border-gray-200">
-                No active situations detected. All routes operating within SLAs.
-              </div>
-            )}
-          </div>
         </div>
-        
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-gray-900">Shift Readiness</h3>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-4">
-            {data.readiness_summary.map((shift, i) => {
-              const shiftPct = shift.readiness_score <= 1.0 
-                ? Math.round(shift.readiness_score * 1000) / 10 
-                : Math.round(shift.readiness_score * 10) / 10;
-              const colorClass = shiftPct >= 85 ? 'text-green-600' : shiftPct >= 75 ? 'text-yellow-600' : 'text-red-600';
-              
-              return (
-                <div key={i} className="flex items-center justify-between border-b last:border-0 pb-4 last:pb-0 border-gray-100">
-                  <div>
-                    <div className="font-semibold text-gray-900">{shift.shift}</div>
-                    <div className="text-xs text-gray-500">{shift.office} • {shift.direction}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`font-bold text-lg ${colorClass}`}>
-                      {shiftPct}%
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {shift.employees_at_risk > 0 ? `${shift.employees_at_risk} at risk` : 'On track'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="grid grid-cols-2 gap-4">
+          {visibleSituations.map(sit => (
+            <SituationCard key={sit.situation_id} situation={sit} />
+          ))}
+          {visibleSituations.length === 0 && (
+            <div className="col-span-2 p-8 text-center text-gray-500 bg-white rounded-lg border border-gray-200">
+              {priorityFilter
+                ? `No ${priorityFilter} situations detected.`
+                : 'No active situations detected. All routes operating within SLAs.'}
+            </div>
+          )}
         </div>
       </div>
 
