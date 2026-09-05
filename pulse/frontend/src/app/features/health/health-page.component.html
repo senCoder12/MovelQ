@@ -1,0 +1,40 @@
+<div class="page">
+  <nz-page-header nzTitle="Pulse" nzSubtitle="Service health">
+    <nz-page-header-extra>
+      <button nz-button nzType="default" [nzLoading]="loading()" (click)="refresh()">
+        <span nz-icon nzType="reload"></span>
+        Refresh
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  @if (error()) {
+    <nz-alert
+      nzType="error"
+      nzShowIcon
+      nzMessage="Backend unreachable"
+      [nzDescription]="error()!"
+    />
+  }
+
+  <nz-spin [nzSpinning]="loading()">
+    <nz-card>
+      <nz-list nzItemLayout="horizontal">
+        <nz-list-item>
+          <nz-list-item-meta
+            nzTitle="Java backend"
+            [nzDescription]="backendMeta()"
+          />
+          <app-status-badge [status]="health()?.status ?? 'UNKNOWN'" />
+        </nz-list-item>
+        <nz-list-item>
+          <nz-list-item-meta
+            nzTitle="Python agent"
+            [nzDescription]="agentMeta()"
+          />
+          <app-status-badge [status]="health()?.agent?.status ?? 'UNKNOWN'" />
+        </nz-list-item>
+      </nz-list>
+    </nz-card>
+  </nz-spin>
+</div>

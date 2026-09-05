@@ -1,0 +1,20 @@
+# data
+data/raw/*
+!data/raw/.gitkeep
+*.duckdb
+pulse-db*.db
+
+# java
+target/
+
+# node
+node_modules/
+.angular/
+
+# python
+__pycache__/
+.venv/
+.pytest_cache/
+
+# env
+.env

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moveinsync.com/pulse/contracts/insight.schema.json",
+  "title": "Insight",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}
