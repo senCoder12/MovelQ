@@ -1,0 +1,36 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Raw data dumps (large CSVs, not source code -- GitHub also hard-rejects
+# anything over 100MB, which data/raw/emp_Data.csv exceeds on its own)
+data/raw/
+
+# OS
+.DS_Store
+
+# Editors
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+# Logs
+*.log
